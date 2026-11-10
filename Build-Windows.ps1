@@ -12,7 +12,8 @@ $arguments = @(
     '--confirm', 'true'
 )
 if ($Scene) {
-    $arguments += @('--scenes', $Scene)
+    $sceneJson = ConvertTo-Json -InputObject @($Scene) -Compress
+    $arguments += @('--scenes', $sceneJson)
 }
 & unity @arguments
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

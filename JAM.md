@@ -53,3 +53,10 @@ Before final submission: launch the build, verify controls, win/lose/restart, so
 - DOTween Free: useful for UI and object feedback; not installed yet.
 - Kenney: choose a small matching art/audio pack after the theme is known.
 - Avoid large asset imports and complex frameworks for a six-hour project.
+
+## Preparation result
+- Windows test build succeeded: 161 seconds, 0 errors, 2 warnings about stripped internal debug-occlusion shaders.
+- Output: `Builds/Windows/Game.exe`. Process startup checked in background without graphics; the standalone visuals and controls are not tested.
+- First build compiled shaders; retain Library/ to keep the local cache.
+- Unity serialized changes to rendering/input/cloud settings and created performance-test Resources during preparation. These changes remain uncommitted for review; do not discard them automatically.
+- Initial Git checkpoint exists. No remote repository configured.
