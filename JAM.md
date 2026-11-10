@@ -50,7 +50,9 @@ Output: `Builds/Windows/Game.exe`. Submit the entire Windows folder, not the EXE
 Before final submission: launch the build, verify controls, win/lose/restart, sound, and quitting.
 
 ## Optional resources
-- DOTween Free: useful for UI and object feedback; not installed yet.
+- Installed: DOTween Free 1.3.045 (Setup complete, UI + TextMeshPro modules, ASMDEF), UniTask 2.5.11, VContainer 1.19.0.
+- UniTask and VContainer Git tags are pinned in Packages/manifest.json; resolved commits are in packages-lock.json.
+- Basic API checks passed: VContainer resolves a registered instance, UniTask returns a result, DOTween reaches its target value.
 - Kenney: choose a small matching art/audio pack after the theme is known.
 - Avoid large asset imports and complex frameworks for a six-hour project.
 
