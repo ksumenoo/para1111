@@ -3,10 +3,13 @@ using UnityEngine;
 
 namespace SecondChance
 {
+    public enum ObstacleKind { Wall, Table, Machinery, Server }
     public readonly struct ArenaWall
     {
         public readonly Vector2 Center, Size;
-        public ArenaWall(float x,float z,float width,float depth) { Center=new Vector2(x,z); Size=new Vector2(width,depth); }
+        public readonly ObstacleKind Kind;
+        public ArenaWall(float x,float z,float width,float depth,ObstacleKind kind=ObstacleKind.Wall)
+        { Center=new Vector2(x,z); Size=new Vector2(width,depth); Kind=kind; }
     }
 
     // One geometry source for visuals, collision, sight, projectiles and AI routing.
@@ -17,6 +20,7 @@ namespace SecondChance
         public Vector2 HalfSize { get; }
         public Vector3 Entry { get; private set; }
         public Vector3 Exit { get; private set; }
+        public string Name { get; private set; } = "АРЕНА";
         private readonly List<Vector3> spawns = new List<Vector3>();
         public IReadOnlyList<Vector3> Spawns => spawns;
         private readonly int width, depth;
@@ -27,6 +31,8 @@ namespace SecondChance
 
         public ArenaLayout(Vector2 halfSize,int room = -1)
         {
+            if(room>=0 && room%3==1) halfSize=new Vector2(Mathf.Round(halfSize.x*1.15f),Mathf.Round(halfSize.y*.8f));
+            if(room>=0 && room%3==2) halfSize=new Vector2(Mathf.Round(halfSize.x*.85f),Mathf.Round(halfSize.y*1.2f));
             HalfSize=halfSize; Entry=Vector3.zero; Exit=new Vector3(0,0,halfSize.y-1);
             if (room >= 0) CreateRoom(room % 3);
             width=Mathf.CeilToInt(halfSize.x*2); depth=Mathf.CeilToInt(halfSize.y*2);
@@ -36,26 +42,48 @@ namespace SecondChance
 
         private void CreateRoom(int room)
         {
-            // Authored at the current 30x20 arena size. Doorways are four units wide.
+            float x=HalfSize.x,z=HalfSize.y;
+            // Distinct footprints and routes: clinic bays, loading yard, server aisles.
             if(room==0)
             {
-                Entry=new Vector3(0,0,-8); Exit=new Vector3(0,0,8.5f);
-                walls.Add(new ArenaWall(-8.5f,0,13,.65f)); walls.Add(new ArenaWall(8.5f,0,13,.65f));
-                walls.Add(new ArenaWall(-7,-5,3,2)); walls.Add(new ArenaWall(7,5,3,2));
+                Name="КЛИНИКА";
+                Entry=new Vector3(0,0,-z+2); Exit=new Vector3(0,0,z-1.5f);
+                walls.Add(new ArenaWall(-(x+2)*.5f,0,x-2,.65f)); walls.Add(new ArenaWall((x+2)*.5f,0,x-2,.65f));
+                foreach(float side in new[]{-1f,1f})
+                foreach(float row in new[]{-1f,1f})
+                {
+                    walls.Add(new ArenaWall(side*x*.47f,row*z*.5f,3,2,ObstacleKind.Table));
+                    walls.Add(new ArenaWall(side*x*.75f,row*z*.45f,.6f,z*.38f));
+                    walls.Add(new ArenaWall(side*x*.86f,row*z*.75f,2,1.8f,ObstacleKind.Machinery));
+                }
             }
             else if(room==1)
             {
-                Entry=new Vector3(-11,0,-7); Exit=new Vector3(11,0,7);
-                walls.Add(new ArenaWall(0,-6.5f,.65f,7)); walls.Add(new ArenaWall(0,5.5f,.65f,9));
-                walls.Add(new ArenaWall(-8,3,4,2)); walls.Add(new ArenaWall(8,-4,4,2));
+                Name="ГРУЗОВОЙ ДВОР";
+                Entry=new Vector3(-x+2,0,0); Exit=new Vector3(x-1.5f,0,0);
+                foreach(float side in new[]{-1f,1f})
+                foreach(float row in new[]{-1f,1f})
+                {
+                    walls.Add(new ArenaWall(side*x*.42f,row*z*.45f,Mathf.Min(6,x*.24f),Mathf.Min(3,z*.22f),ObstacleKind.Machinery));
+                    walls.Add(new ArenaWall(side*x*.8f,row*z*.65f,2,1.8f,ObstacleKind.Machinery));
+                }
+                walls.Add(new ArenaWall(0,-z*.65f,3,z*.3f,ObstacleKind.Machinery));
+                walls.Add(new ArenaWall(0,z*.65f,3,z*.3f,ObstacleKind.Machinery));
+                walls.Add(new ArenaWall(0,0,3,2.3f,ObstacleKind.Machinery));
             }
             else
             {
-                Entry=new Vector3(0,0,-8); Exit=new Vector3(10,0,8);
-                walls.Add(new ArenaWall(-11.5f,-2,7,.65f)); walls.Add(new ArenaWall(0,-2,8,.65f)); walls.Add(new ArenaWall(11.5f,-2,7,.65f));
-                walls.Add(new ArenaWall(0,5,.65f,6));
+                Name="СЕРВЕРНЫЙ УЗЕЛ";
+                Entry=new Vector3(0,0,-z+2); Exit=new Vector3(x*.65f,0,z-1.5f);
+                foreach(float column in new[]{-.6f,0,.6f})
+                foreach(float row in new[]{-.45f,.45f})
+                    walls.Add(new ArenaWall(column*x,row*z,2.5f,z*.5f,ObstacleKind.Server));
+                walls.Add(new ArenaWall(-x*.32f,0,2,1,ObstacleKind.Table));
+                walls.Add(new ArenaWall(x*.32f,0,2,1,ObstacleKind.Table));
+                walls.Add(new ArenaWall(-x+1.5f,0,2,3,ObstacleKind.Machinery));
+                walls.Add(new ArenaWall(x-1.5f,0,2,3,ObstacleKind.Machinery));
             }
-            foreach(var point in new[] { new Vector3(-11,0,7),new Vector3(-5,0,7),new Vector3(5,0,7),new Vector3(11,0,7),new Vector3(-11,0,-7),new Vector3(11,0,-7),new Vector3(-11,0,3),new Vector3(11,0,3) })
+            foreach(var point in new[] { new Vector3(-x+2,0,z-2),new Vector3(-x*.33f,0,z-2),new Vector3(x*.33f,0,z-2),new Vector3(x-2,0,z-2),new Vector3(-x+2,0,-z+2),new Vector3(x-2,0,-z+2),new Vector3(-x+2,0,2),new Vector3(x-2,0,2) })
                 spawns.Add(NearestFree(point,.7f));
         }
 

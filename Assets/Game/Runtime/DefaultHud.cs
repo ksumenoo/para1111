@@ -36,40 +36,42 @@ namespace SecondChance
             if (session == null || canvas == null) return;
             var player = session.Player;
             int seconds = Mathf.CeilToInt(Mathf.Max(0, session.Settings.RunDuration - session.Elapsed));
-            stats.text = $"SECOND CHANCE   /   {seconds / 60:00}:{seconds % 60:00}\nWAVE {session.Wave}   |   KILLS {session.Kills}   |   TRANSFERS {session.Transfers}";
+            stats.text = $"ВТОРОЙ ШАНС   /   {seconds / 60:00}:{seconds % 60:00}\nВОЛНА {session.Wave}   |   УБИТО {session.Kills}   |   ПЕРЕСЕЛЕНИЙ {session.Transfers}";
             if(session.Settings.UseRooms)
             {
                 int elapsed=Mathf.FloorToInt(session.Elapsed);
-                stats.text=$"SECOND CHANCE   /   {elapsed/60:00}:{elapsed%60:00}\nROOM {session.Room+1}/{session.Settings.RoomCount}   |   WAVE {session.WavesThisRoom}/{session.Settings.WavesPerRoom}   |   TRANSFERS {session.Transfers}";
+                stats.text=$"{session.Layout.Name}   {session.Room+1}/{session.Settings.RoomCount}   /   {elapsed/60:00}:{elapsed%60:00}\nВОЛНА {session.WavesThisRoom}/{session.Settings.WavesPerRoom}   |   ПЕРЕСЕЛЕНИЙ {session.Transfers}";
             }
             if (player != null)
             {
-                stats.text += $"\n{player.Definition.Label}   {Mathf.CeilToInt(player.Health)} / {player.Definition.Health:0}";
+                stats.text += $"\n{BodyName(player.Definition.Kind)}   {Mathf.CeilToInt(player.Health)} / {player.Definition.Health:0}";
                 SetBar(health, Mathf.Clamp01(player.Health / player.Definition.Health), .845f, .865f);
             }
             SetBar(dash, session.DashReady, .817f, .83f);
-            controls.text = "WASD / ARROWS  move     LMB  attack     SPACE / SHIFT  dash     E  possess     ESC  pause";
+            controls.text = "WASD / стрелки — движение     ЛКМ — атака     ПРОБЕЛ / SHIFT — рывок\nE — переселение / выход     ESC — пауза";
             veil.gameObject.SetActive(paused || session.Phase == RunPhase.Ready || session.Phase == RunPhase.Won || session.Phase == RunPhase.Lost);
             center.color = Color.white;
             var centerRect = center.rectTransform;
             bool choosing = !paused && session.Phase == RunPhase.Possessing;
             centerRect.anchorMin = choosing ? new Vector2(.15f,.11f) : new Vector2(.13f,.3f);
             centerRect.anchorMax = choosing ? new Vector2(.85f,.31f) : new Vector2(.87f,.72f);
-            center.fontSize = choosing ? 34 : 44;
-            if (paused) center.text = "PAUSED\nESC — continue";
+            center.fontSize = choosing ? 32 : session.Phase == RunPhase.Ready ? 36 : 42;
+            if (paused) center.text = "ПАУЗА\nESC — продолжить";
             else switch (session.Phase)
             {
                 case RunPhase.Ready:
-                    center.text = "SECOND CHANCE\n\nWound an enemy to mark its body.\nWhen you die: 2 seconds to press E and possess it.\nYou inherit its weapon and REMAINING health.\n"+(session.Settings.UseRooms ? "Clear each room, then press E at its exit.\nEnemies are visible only in your sight cone.\n" : "")+"\nENTER — begin"; break;
+                    center.text = "ВТОРОЙ ШАНС\n\nРанение оставляет на враге временную метку.\nПосле смерти у тебя 2 секунды: нажми E,\nчтобы захватить отмеченного врага поблизости.\nТы получишь его оружие и ОСТАВШЕЕСЯ здоровье.\n"+(session.Settings.UseRooms ? "Зачисти локацию и нажми E у голубого выхода.\nВрагов видно только в конусе обзора к курсору.\n" : "")+"\nENTER — начать"; break;
                 case RunPhase.Possessing:
                     center.color = new Color(1,.4f,.75f);
-                    center.text = $"SECOND CHANCE   {session.PossessionRemaining:0.0}s\n" + (session.Candidate != null ? $"E — POSSESS {session.Candidate.Definition.Label}\n{session.Candidate.Health:0} HP" : "NO VISIBLE MARKED BODY IN RANGE"); break;
-                case RunPhase.Intermission: center.text = session.AwaitingExit ? "ROOM CLEAR\nGo to the cyan exit — E" : "WAVE CLEARED\nCatch your breath"; break;
-                case RunPhase.Won: center.text = "YOU SURVIVED\nThe soul lives on.\n\nR / ENTER — play again"; break;
-                case RunPhase.Lost: center.text = "NO SECOND CHANCE\nThe last body is gone.\n\nR / ENTER — retry"; break;
+                    center.text = $"ВТОРОЙ ШАНС   {session.PossessionRemaining:0.0} с\n" + (session.Candidate != null ? $"E — ЗАХВАТИТЬ: {BodyName(session.Candidate.Definition.Kind)}\nЗдоровье: {session.Candidate.Health:0}" : "РЯДОМ НЕТ ДОСТУПНОГО ТЕЛА С МЕТКОЙ"); break;
+                case RunPhase.Intermission: center.text = session.AwaitingExit ? "ЛОКАЦИЯ ЗАЧИЩЕНА\nПодойди к голубому выходу и нажми E" : "ВОЛНА ОТБИТА\nПереведи дух"; break;
+                case RunPhase.Won: center.text = "ТЫ ВЫЖИЛ\nСущность продолжает жить.\n\nR / ENTER — сыграть снова"; break;
+                case RunPhase.Lost: center.text = "ВТОРОГО ШАНСА НЕТ\nПоследнее тело потеряно.\n\nR / ENTER — повторить"; break;
                 default: center.text = ""; break;
             }
         }
+
+        private static string BodyName(BodyKind kind) => kind == BodyKind.Brute ? "ГРОМИЛА" : kind == BodyKind.Gunner ? "СТРЕЛОК" : "ДУЭЛЯНТ";
 
         private void SetBar(UnityEngine.UI.Image image, float fraction, float minY, float maxY)
         { image.rectTransform.anchorMax = new Vector2(.025f + .235f * fraction, maxY); image.rectTransform.anchorMin = new Vector2(.025f,minY); }

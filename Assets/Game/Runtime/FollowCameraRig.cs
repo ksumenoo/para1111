@@ -46,11 +46,10 @@ namespace SecondChance
         private Vector3 Center()
         {
             Vector3 position = session.Player != null ? session.Player.Position : Vector3.zero;
-            float halfWidth = output.orthographicSize * output.aspect;
-            float halfDepth = output.orthographicSize / (16f / Mathf.Sqrt(16 * 16 + 11 * 11));
-            float x = Mathf.Max(0, settings.ArenaHalfSize.x - halfWidth);
-            float z = Mathf.Max(0, settings.ArenaHalfSize.y - halfDepth);
-            return new Vector3(Mathf.Clamp(position.x, -x, x), 0, Mathf.Clamp(position.z, -z, z));
+            // Follow to every edge. Clamping the viewport to the floor pushed the body
+            // offscreen, particularly its head at the north wall. Exterior dressing
+            // fills the extra view; a small forward offset leaves room above the head.
+            return position + Vector3.forward * .8f;
         }
 
         public void Refresh()

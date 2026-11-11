@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 303cbfc89865f534db067a839b599060, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: SecondChance::SecondChance.GameSettings
-  ArenaHalfSize: {x: 15, y: 10}
+  ArenaHalfSize: {x: 22, y: 15}
   RunDuration: 300
   MarkDuration: 8
   PossessionRadius: 9
@@ -31,13 +31,19 @@ MonoBehaviour:
   MaxWaveSize: 20
   UseRooms: 1
   UseVision: 1
+  CameraSize: 5.6
+  CameraDamping: 0.2
+  VentProp: {fileID: 919132149155446097, guid: 8d6cd990585c2f644b7b640a77cd0c52, type: 3}
+  PipeProp: {fileID: 919132149155446097, guid: 96231279afb34bf4182e3eb1c731c2dd, type: 3}
+  TerminalProp: {fileID: 919132149155446097, guid: c205aa585b45ab543821d1a68fde72f7, type: 3}
+  StreetLightProp: {fileID: 919132149155446097, guid: 05ef6e654d56b654294639e570eb7b88, type: 3}
   VisionAngle: 110
   VisionDistance: 24
   RoomCount: 3
   WavesPerRoom: 2
   Bodies:
   - Kind: 0
-    Label: DUELIST
+    Label: "\u0414\u0423\u042D\u041B\u042F\u041D\u0422"
     Health: 65
     Speed: 6
     Damage: 24
@@ -50,7 +56,7 @@ MonoBehaviour:
     Color: {r: 0.15, g: 0.8, b: 0.85, a: 1}
     VisualPrefab: {fileID: 756536392643375014, guid: 5bb7e96c0cf29244c91647fb8aa08747, type: 3}
   - Kind: 1
-    Label: BRUTE
+    Label: "\u0413\u0420\u041E\u041C\u0418\u041B\u0410"
     Health: 135
     Speed: 3.5
     Damage: 46
@@ -63,7 +69,7 @@ MonoBehaviour:
     Color: {r: 0.95, g: 0.45, b: 0.15, a: 1}
     VisualPrefab: {fileID: 8771319007847625365, guid: 293de7fa43d5ed943ba756378a4c5492, type: 3}
   - Kind: 2
-    Label: GUNNER
+    Label: "\u0421\u0422\u0420\u0415\u041B\u041E\u041A"
     Health: 40
     Speed: 4.8
     Damage: 18

@@ -70,5 +70,7 @@ Before final submission: launch the build, verify controls, win/lose/restart, so
 - Initial Git checkpoint exists. No remote repository configured.
 # Camera and teammate prototype
 
-- Cinemachine 6.6 follows a stable player proxy; orthographic size 5.6, damping 0.2. Camera center is clamped to the room using viewport dimensions. Room changes/restarts snap; possession follows the new body. Combat shake is additive in the Cinemachine pipeline.
+- Cinemachine 6.6 follows a stable player proxy; orthographic size 5.6, damping 0.2. Follow continues to all room edges, with 0.8 forward headroom; exterior dressing fills the view beyond the perimeter. Room changes/restarts snap; possession follows the new body. Combat shake is additive in the Cinemachine pipeline.
+- Russian HUD, instructions, body names and result screens. Three expanded locations: clinic 44x30 (14 obstacles), loading yard 50x24 (11), server node 38x36 (10). Distinct palettes, furniture, machinery, server racks and exterior equipment; old static 30x20 dressing disabled in Arena. Cover geometry remains shared by movement, AI, sight and projectiles.
+- Verified: 24 camera edge/corner samples over 4 aspect ratios, head/feet safe; 24 expanded-map enemy routes and all exits; core/world checks and runtime room-root cleanup. Cyrillic font supported.
 - Compared https://github.com/evansfiet-sketch/- : keep this project's combat/rooms/visibility/animated-body implementation. Useful material to adapt next: Oттиск storyline, clinic props, memory messages, Baron and alternate endings. These are not integrated yet; avoid importing a second GameManager/input/combat system.

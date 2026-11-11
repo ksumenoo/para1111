@@ -14,7 +14,7 @@ namespace SecondChance
                 var kind = Wave == 1 ? BodyKind.Duelist : (BodyKind)random.Next(3);
                 // Each wave after the first exposes all three body options.
                 if (Wave > 1 && i < 3) kind = (BodyKind)i;
-                var half = settings.ArenaHalfSize;
+                var half = Layout.HalfSize;
                 float x = (float)(random.NextDouble() * 2 - 1) * (half.x - 1);
                 float z = (float)(random.NextDouble() * 2 - 1) * (half.y - 1);
                 if (random.Next(2) == 0) x = (i % 2 == 0 ? -1 : 1) * (half.x - 1);
