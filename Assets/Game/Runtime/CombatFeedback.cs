@@ -6,39 +6,80 @@ namespace SecondChance
     public sealed class CombatFeedback : MonoBehaviour
     {
         [SerializeField] private AudioClip hitSound, deathSound, dashSound, transferSound, attackSound;
+        [SerializeField] private AudioClip heavyHitSound, shotSound, enemyDeathSound;
+        [SerializeField, Range(0,1)] private float masterVolume = .65f;
+        [SerializeField] private Texture2D sparkTexture, muzzleTexture;
         private Camera gameCamera;
         private Vector3 cameraRest;
         private Material lineMaterial;
         private AudioSource audioSource;
         private float shake;
+        private Material sparkMaterial, muzzleMaterial;
 
         public void Initialize(Camera camera, Material material)
         {
             gameCamera = camera; cameraRest = camera.transform.position; lineMaterial = material;
             audioSource = gameObject.AddComponent<AudioSource>(); audioSource.spatialBlend = 0;
+            audioSource.volume = masterVolume;
+            if (sparkTexture != null) sparkMaterial = new Material(material) { mainTexture = sparkTexture };
+            if (muzzleTexture != null) muzzleMaterial = new Material(material) { mainTexture = muzzleTexture };
         }
 
         public void Play(CombatEvent message)
         {
             AudioClip clip = null;
+            float volume = 1;
             switch (message.Cue)
             {
                 case CombatCue.Hit:
                     shake = Mathf.Max(shake, message.Body.IsPlayer ? .28f : .12f);
-                    Burst(message.Position, Color.white, .6f, .12f); clip = hitSound; break;
+                    Burst(message.Position, Color.white, .6f, .12f);
+                    Sparks(message.Position, message.Body.IsPlayer ? new Color(1,.2f,.4f) : Color.cyan, 5, sparkMaterial);
+                    clip = message.Other != null && message.Other.Definition.Kind == BodyKind.Brute && heavyHitSound != null ? heavyHitSound : hitSound;
+                    volume = .65f; break;
                 case CombatCue.Death:
                     shake = Mathf.Max(shake, message.Body.IsPlayer ? .6f : .25f);
-                    Burst(message.Position, message.Body.Definition.Color, 1.5f, .32f); clip = deathSound; break;
+                    Burst(message.Position, message.Body.Definition.Color, 1.5f, .32f);
+                    Sparks(message.Position, message.Body.IsPlayer ? Color.cyan : message.Body.Definition.Color, 12, sparkMaterial);
+                    clip = message.Body.IsPlayer ? deathSound : enemyDeathSound;
+                    volume = message.Body.IsPlayer ? 1 : .5f; break;
                 case CombatCue.Dash:
-                    Burst(message.Position, Color.cyan, .9f, .18f); clip = dashSound; break;
+                    Burst(message.Position, Color.cyan, .9f, .18f); clip = dashSound; volume = .45f; break;
                 case CombatCue.Possessed:
                     shake = .35f;
                     Burst(message.Position, Color.cyan, 2, .4f); clip = transferSound; break;
                 case CombatCue.Attack:
-                    if (message.Body.Definition.Kind != BodyKind.Gunner) Slash(message);
-                    clip = attackSound; break;
+                    bool gunner = message.Body.Definition.Kind == BodyKind.Gunner;
+                    if (!gunner) Slash(message);
+                    else Sparks(message.Position + message.Direction * .9f, Color.cyan, 2, muzzleMaterial);
+                    clip = gunner ? shotSound : attackSound;
+                    volume = message.Body.IsPlayer ? (gunner ? .55f : .18f) : .12f; break;
             }
-            if (clip != null) { audioSource.pitch = Random.Range(.94f,1.06f); audioSource.PlayOneShot(clip, .8f); }
+            if (clip != null) { audioSource.pitch = Random.Range(.94f,1.06f); audioSource.PlayOneShot(clip, volume); }
+        }
+
+        private void Sparks(Vector3 position, Color color, int count, Material material)
+        {
+            if (material == null) return;
+            var particles = new GameObject("Electric impact").AddComponent<ParticleSystem>();
+            particles.transform.SetParent(transform, false); particles.transform.position = position + Vector3.up * .8f;
+            particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = particles.main;
+            main.loop = false; main.playOnAwake = false; main.duration = .4f;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(.12f,.28f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(1.5f,4);
+            main.startSize = new ParticleSystem.MinMaxCurve(.2f,.55f);
+            main.startColor = color; main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.useUnscaledTime = true; main.maxParticles = 24;
+            var emission = particles.emission; emission.enabled = false;
+            var shape = particles.shape; shape.shapeType = ParticleSystemShapeType.Sphere; shape.radius = .1f;
+            var fade = particles.colorOverLifetime; fade.enabled = true;
+            var gradient = new Gradient();
+            gradient.SetKeys(new[] { new GradientColorKey(Color.white,0), new GradientColorKey(Color.white,1) }, new[] { new GradientAlphaKey(1,0), new GradientAlphaKey(0,1) });
+            fade.color = gradient;
+            particles.GetComponent<ParticleSystemRenderer>().sharedMaterial = material;
+            particles.Play(); particles.Emit(count);
+            Destroy(particles.gameObject, .8f);
         }
 
         private void Slash(CombatEvent message)
@@ -82,6 +123,8 @@ namespace SecondChance
         {
             foreach (var line in GetComponentsInChildren<LineRenderer>()) DOTween.Kill(line);
             if (gameCamera != null) gameCamera.transform.position = cameraRest;
+            if (sparkMaterial != null) Destroy(sparkMaterial);
+            if (muzzleMaterial != null) Destroy(muzzleMaterial);
         }
     }
 }

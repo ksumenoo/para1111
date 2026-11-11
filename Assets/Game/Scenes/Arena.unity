@@ -2516,6 +2516,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SecondChance::SecondChance.GameDriver
   gameCamera: {fileID: 291949961}
   showDefaultHud: 1
+  soulGlowTexture: {fileID: 2800000, guid: 7bf3876d1c7df0c46944f98005493004, type: 3}
 --- !u!4 &1571494514
 Transform:
   m_ObjectHideFlags: 0
@@ -2543,11 +2544,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb987d1cea47c334ca7b9224cf8b5ebf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SecondChance::SecondChance.CombatFeedback
-  hitSound: {fileID: 0}
-  deathSound: {fileID: 0}
-  dashSound: {fileID: 0}
-  transferSound: {fileID: 0}
-  attackSound: {fileID: 0}
+  hitSound: {fileID: 8300000, guid: 53dadf8c0e481e64fa4c2e018dba5ec8, type: 3}
+  deathSound: {fileID: 8300000, guid: 399fd42fced28d245bc49f2dcaf1db65, type: 3}
+  dashSound: {fileID: 8300000, guid: f71e6fbada7ec4b4a99f8398ecb4a484, type: 3}
+  transferSound: {fileID: 8300000, guid: ce82b69f9a5b94d42a94b07f1476fcb8, type: 3}
+  attackSound: {fileID: 8300000, guid: eb9c63c564668ba4fbcd2d38907e9344, type: 3}
+  heavyHitSound: {fileID: 8300000, guid: 077d64f7991c25e4aabd600ae36973e4, type: 3}
+  shotSound: {fileID: 8300000, guid: 28c9379e76c5a1545a5a8c5d2103b364, type: 3}
+  enemyDeathSound: {fileID: 8300000, guid: c4f2276e8e1b1d94a802e43100a7938f, type: 3}
+  masterVolume: 0.65
+  sparkTexture: {fileID: 2800000, guid: b8baad68374631d4eaf38e4925aee863, type: 3}
+  muzzleTexture: {fileID: 2800000, guid: db651df57f7f2494e811c393d7050918, type: 3}
 --- !u!1 &1740729375
 GameObject:
   m_ObjectHideFlags: 0

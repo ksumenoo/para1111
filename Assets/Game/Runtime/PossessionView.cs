@@ -10,6 +10,8 @@ namespace SecondChance
         private Transform soulRoot, orb;
         private LineRenderer radius, countdown, tether;
         private Material soulMaterial;
+        private Material glowMaterial;
+        private Camera gameCamera;
         private Tween transfer;
         private GameObject travellingSoul;
         private float pulse;
@@ -17,10 +19,12 @@ namespace SecondChance
         private static readonly Color Cyan = new Color(.15f, 1, 1);
         private static readonly Color Pink = new Color(1, .2f, .55f);
 
-        public void Initialize(GameSession game, Material lineMaterial)
+        public void Initialize(GameSession game, Material lineMaterial, Texture2D glowTexture = null, Camera camera = null)
         {
             session = game;
             soulMaterial = new Material(lineMaterial) { color = Cyan };
+            gameCamera = camera;
+            if (glowTexture != null) glowMaterial = new Material(lineMaterial) { mainTexture = glowTexture, color = Cyan };
             soulRoot = new GameObject("Soul / capture radius").transform;
             soulRoot.SetParent(transform, false);
             orb = MakeOrb("Exposed soul", soulRoot);
@@ -115,6 +119,15 @@ namespace SecondChance
             result.transform.SetParent(parent, false);
             result.transform.localScale = Vector3.one * .4f;
             result.GetComponent<Renderer>().sharedMaterial = soulMaterial;
+            if (glowMaterial != null && gameCamera != null)
+            {
+                var glow = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                glow.name = "Soul halo"; Destroy(glow.GetComponent<Collider>());
+                glow.transform.SetParent(result.transform, false);
+                glow.transform.rotation = gameCamera.transform.rotation;
+                glow.transform.localScale = Vector3.one * 3.2f;
+                glow.GetComponent<Renderer>().sharedMaterial = glowMaterial;
+            }
             return result.transform;
         }
 
@@ -133,6 +146,7 @@ namespace SecondChance
             ResetTransfer();
             if (soulRoot != null) Destroy(soulRoot.gameObject);
             if (soulMaterial != null) Destroy(soulMaterial);
+            if (glowMaterial != null) Destroy(glowMaterial);
         }
     }
 }

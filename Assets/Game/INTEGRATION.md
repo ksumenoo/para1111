@@ -15,9 +15,10 @@ One top-down arena, three bodies, five-minute survival plus clearing the last wa
 - `GameSettings.asset`: balance, three `BodyDefinition`s, arena bounds, timings. Body numbers are available in Inspector.
 - `GameBootstrap`: VContainer composition root. `GameDriver`: Input System, lifecycle, view binding.
 - `BodyView`: replace fallback visuals through `BodyDefinition.VisualPrefab`. Prefab forward +Z, origin at feet. Do not add gameplay movement scripts.
-- `CombatFeedback` on scene object `Game`: assign optional hit/death/dash/transfer/attack audio clips in Inspector. The component supplies hit flash, attack arcs, impact rings and camera shake. No audio files are bundled yet.
+- `CombatFeedback` on scene object `Game`: Kenney clips assigned for hit/heavy hit, melee swing, shot, enemy/player death, dash and transfer. Master Volume starts at 0.65. All clips and volume are replaceable in Inspector; audio taste still needs user review. Spark/muzzle textures provide short impact particles.
 - `PossessionView`: exposed cyan soul, capture-radius boundary, real-time countdown arc, selected-host tether and travelling spark/trail. It is presentation only and does not delay ownership transfer. Uses unscaled animation time; reset/scene teardown clears the effect.
 - Selected-host ring pulses white; out-of-range marked bodies dim during the death window. Possession text sits below the fight.
+- Kenney light texture supplies the soul halo. Imported subset and original CC0 licenses: Assets/Game/ThirdParty/Kenney.
 - `GameSession.Combat` event: `Windup`, `Attack`, `Hit`, `Death`, `Dash`, `Possessed`. Event has Body/Other, world Position/Direction, damage Amount. Body can already have zero HP on Death; avoid storing mutable snapshots for later playback.
 - `Spawned(BodyState)`, `PhaseChanged(RunPhase)`: integration events.
 - Player ring cyan; wounded enemy ring pink; possession target white. Enemy red sector is the committed attack direction; dodge after it appears.

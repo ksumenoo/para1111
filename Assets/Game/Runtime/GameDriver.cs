@@ -9,6 +9,7 @@ namespace SecondChance
     {
         [SerializeField] private Camera gameCamera;
         [SerializeField] private bool showDefaultHud = true;
+        [SerializeField] private Texture2D soulGlowTexture;
         private readonly Dictionary<int, BodyView> views = new Dictionary<int, BodyView>();
         private readonly List<int> removedViews = new List<int>();
         private readonly List<GameObject> shotViews = new List<GameObject>();
@@ -38,7 +39,7 @@ namespace SecondChance
             if (feedback == null) feedback = gameObject.AddComponent<CombatFeedback>();
             feedback.Initialize(gameCamera, lineMaterial);
             possessionView = gameObject.AddComponent<PossessionView>();
-            possessionView.Initialize(session, lineMaterial);
+            possessionView.Initialize(session, lineMaterial, soulGlowTexture, gameCamera);
             if (showDefaultHud) { hud = gameObject.AddComponent<DefaultHud>(); hud.Initialize(session); }
             session.Spawned += SpawnView;
             session.Combat += OnCombat;
