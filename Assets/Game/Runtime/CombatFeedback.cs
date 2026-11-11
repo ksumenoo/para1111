@@ -12,15 +12,23 @@ namespace SecondChance
         private Camera gameCamera;
         private Vector3 cameraRest;
         private Material lineMaterial;
-        private AudioSource audioSource;
+        // Separate fixed voices prevent crowd kills from multiplying overlapping OneShots.
+        // Bus gains sum to 1, leaving headroom at the configured master volume.
+        private readonly AudioSource[] voices = new AudioSource[4];
+        private readonly float[] nextSoundTime = new float[4];
+        private static readonly float[] BusGain = { .36f, .1f, .14f, .4f };
         private float shake;
         private Material sparkMaterial, muzzleMaterial;
 
         public void Initialize(Camera camera, Material material)
         {
             gameCamera = camera; cameraRest = camera.transform.position; lineMaterial = material;
-            audioSource = gameObject.AddComponent<AudioSource>(); audioSource.spatialBlend = 0;
-            audioSource.volume = masterVolume;
+            for (int i = 0; i < voices.Length; i++)
+            {
+                voices[i] = gameObject.AddComponent<AudioSource>();
+                voices[i].spatialBlend = 0; voices[i].playOnAwake = false;
+                voices[i].priority = i == 3 ? 64 : 128;
+            }
             if (sparkTexture != null) sparkMaterial = new Material(material) { mainTexture = sparkTexture };
             if (muzzleTexture != null) muzzleMaterial = new Material(material) { mainTexture = muzzleTexture };
         }
@@ -29,6 +37,8 @@ namespace SecondChance
         {
             AudioClip clip = null;
             float volume = 1;
+            int channel = 0;
+            float spacing = .055f;
             switch (message.Cue)
             {
                 case CombatCue.Hit:
@@ -36,26 +46,43 @@ namespace SecondChance
                     Burst(message.Position, Color.white, .6f, .12f);
                     Sparks(message.Position, message.Body.IsPlayer ? new Color(1,.2f,.4f) : Color.cyan, 5, sparkMaterial);
                     clip = message.Other != null && message.Other.Definition.Kind == BodyKind.Brute && heavyHitSound != null ? heavyHitSound : hitSound;
-                    volume = .65f; break;
+                    volume = 1; break;
                 case CombatCue.Death:
                     shake = Mathf.Max(shake, message.Body.IsPlayer ? .6f : .25f);
                     Burst(message.Position, message.Body.Definition.Color, 1.5f, .32f);
                     Sparks(message.Position, message.Body.IsPlayer ? Color.cyan : message.Body.Definition.Color, 12, sparkMaterial);
                     clip = message.Body.IsPlayer ? deathSound : enemyDeathSound;
-                    volume = message.Body.IsPlayer ? 1 : .5f; break;
+                    channel = message.Body.IsPlayer ? 3 : 1;
+                    spacing = message.Body.IsPlayer ? 0 : .12f;
+                    volume = message.Body.IsPlayer ? 1 : .65f;
+                    if (message.Body.IsPlayer) for (int i = 0; i < 3; i++) voices[i].Stop();
+                    break;
                 case CombatCue.Dash:
-                    Burst(message.Position, Color.cyan, .9f, .18f); clip = dashSound; volume = .45f; break;
+                    Burst(message.Position, Color.cyan, .9f, .18f); clip = dashSound; volume = .65f; channel = 3; spacing = .06f; break;
                 case CombatCue.Possessed:
                     shake = .35f;
-                    Burst(message.Position, Color.cyan, 2, .4f); clip = transferSound; break;
+                    Burst(message.Position, Color.cyan, 2, .4f); clip = transferSound; channel = 3; spacing = 0; break;
                 case CombatCue.Attack:
                     bool gunner = message.Body.Definition.Kind == BodyKind.Gunner;
                     if (!gunner) Slash(message);
                     else Sparks(message.Position + message.Direction * .9f, Color.cyan, 2, muzzleMaterial);
                     clip = gunner ? shotSound : attackSound;
-                    volume = message.Body.IsPlayer ? (gunner ? .55f : .18f) : .12f; break;
+                    volume = message.Body.IsPlayer ? (gunner ? .8f : .45f) : .25f;
+                    channel = 2; spacing = .045f; break;
             }
-            if (clip != null) { audioSource.pitch = Random.Range(.94f,1.06f); audioSource.PlayOneShot(clip, volume); }
+            PlayVoice(clip, volume, channel, spacing);
+        }
+
+        private void PlayVoice(AudioClip clip, float volume, int channel, float spacing)
+        {
+            if (clip == null || Time.unscaledTime < nextSoundTime[channel]) return;
+            var voice = voices[channel];
+            voice.Stop();
+            voice.clip = clip;
+            voice.volume = Mathf.Clamp01(masterVolume) * BusGain[channel] * Mathf.Clamp01(volume);
+            voice.pitch = Random.Range(.97f,1.03f);
+            voice.Play();
+            nextSoundTime[channel] = Time.unscaledTime + spacing;
         }
 
         private void Sparks(Vector3 position, Color color, int count, Material material)
