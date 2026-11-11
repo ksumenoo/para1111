@@ -2544,12 +2544,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb987d1cea47c334ca7b9224cf8b5ebf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SecondChance::SecondChance.CombatFeedback
-  hitSound: {fileID: 8300000, guid: 373bb012b57f45440816a6100f8f34da, type: 3}
+  hitSound: {fileID: 8300000, guid: 673370944d5b3524fbf9eb89e11f0901, type: 3}
   deathSound: {fileID: 8300000, guid: 399fd42fced28d245bc49f2dcaf1db65, type: 3}
   dashSound: {fileID: 8300000, guid: f71e6fbada7ec4b4a99f8398ecb4a484, type: 3}
   transferSound: {fileID: 8300000, guid: ce82b69f9a5b94d42a94b07f1476fcb8, type: 3}
   attackSound: {fileID: 0}
-  heavyHitSound: {fileID: 8300000, guid: 5bf7150cea791a1448656f8199a92adf, type: 3}
+  heavyHitSound: {fileID: 8300000, guid: 077d64f7991c25e4aabd600ae36973e4, type: 3}
   shotSound: {fileID: 8300000, guid: 28c9379e76c5a1545a5a8c5d2103b364, type: 3}
   enemyDeathSound: {fileID: 8300000, guid: 5bfdf9402ca7f344fa93f2e343416190, type: 3}
   masterVolume: 0.65
