@@ -35,6 +35,7 @@ namespace SecondChance
         [Range(0,1)] public float CameraDamping = .2f;
         [Header("Room dressing")]
         public GameObject VentProp, PipeProp, TerminalProp, StreetLightProp;
+        public GameObject CrateProp, TankProp, ScreenProp, ConsoleProp, CableProp, PanelLightProp, MedicalProp;
         [Range(30,180)] public float VisionAngle = 110;
         public float VisionDistance = 24;
         [Min(1)] public int RoomCount = 3, WavesPerRoom = 2;

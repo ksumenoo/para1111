@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SecondChance
 {
-    public enum ObstacleKind { Wall, Table, Machinery, Server }
+    public enum ObstacleKind { Wall, Table, Machinery, Server, Supplies }
     public readonly struct ArenaWall
     {
         public readonly Vector2 Center, Size;
@@ -83,8 +83,27 @@ namespace SecondChance
                 walls.Add(new ArenaWall(-x+1.5f,0,2,3,ObstacleKind.Machinery));
                 walls.Add(new ArenaWall(x-1.5f,0,2,3,ObstacleKind.Machinery));
             }
+            AddSupplyBays();
             foreach(var point in new[] { new Vector3(-x+2,0,z-2),new Vector3(-x*.33f,0,z-2),new Vector3(x*.33f,0,z-2),new Vector3(x-2,0,z-2),new Vector3(-x+2,0,-z+2),new Vector3(x-2,0,-z+2),new Vector3(-x+2,0,2),new Vector3(x-2,0,2) })
                 spawns.Add(NearestFree(point,.7f));
+        }
+
+        private void AddSupplyBays()
+        {
+            int count=0;
+            foreach(float row in new[]{-.72f,.72f,-.25f,.25f})
+            foreach(float column in new[]{-.32f,.32f,-.7f,.7f})
+            {
+                var p=new Vector3(column*HalfSize.x,0,row*HalfSize.y);
+                if((p-Entry).sqrMagnitude<20 || (p-Exit).sqrMagnitude<20)continue;
+                bool clear=true;
+                foreach(var wall in walls)
+                    if(Mathf.Abs(p.x-wall.Center.x)<wall.Size.x*.5f+.9f+1.8f && Mathf.Abs(p.z-wall.Center.y)<wall.Size.y*.5f+.65f+1.8f)
+                    {clear=false;break;}
+                if(!clear)continue;
+                walls.Add(new ArenaWall(p.x,p.z,1.8f,1.3f,ObstacleKind.Supplies));
+                if(++count==10)return;
+            }
         }
 
         public bool IsFree(Vector3 point,float radius)
