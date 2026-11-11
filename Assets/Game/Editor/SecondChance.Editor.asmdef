@@ -1,0 +1,5 @@
+{
+  "name": "SecondChance.Editor",
+  "references": ["SecondChance", "VContainer"],
+  "includePlatforms": ["Editor"]
+}

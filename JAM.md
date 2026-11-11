@@ -1,10 +1,15 @@
 # Game jam — 11 November 2026
 
 ## Scope
-- 6 hours. Theme announced at the start.
+- 6 hours. Theme: Second Chance. Approved game: top-down possession slasher.
 - Deliver a Windows build; other formats are allowed.
-- One main mechanic, one short level, clear win/lose/restart.
-- Check jam rules before reusing prepared code or external assets.
+- One arena, three bodies, waves, attack, dash, lethal-hit possession, win/lose/restart. No progression/inventory/procedural generation.
+- AI owns code/integration/builds; user owns visual direction, sound, feel, and hands-on testing. Main scene edits are authorized.
+- Current implementation / controls / replacement points: Assets/Game/INTEGRATION.md.
+- Main scene: Assets/Game/Scenes/Arena.unity. Build-Windows.ps1 now builds the game by default.
+- 14 core gameplay checks cover combat and possession; live possession into Brute preserved 115 HP. Full five-minute human balance/feel test remains necessary.
+- Current arena build: build_95d2907a2e09, Succeeded in 13.4 seconds, 0 errors / 0 warnings. Windows player startup checked without graphics; no initialization exceptions in Temp/arena-player.log.
+- User confirmed jam rules allow external assets, prepared code, and AI assistance.
 - Keep assistant replies and tool output short. Read only relevant files; avoid repeated discovery.
 
 ## Time budget
@@ -57,6 +62,7 @@ Before final submission: launch the build, verify controls, win/lose/restart, so
 - Avoid large asset imports and complex frameworks for a six-hour project.
 
 ## Preparation result
+- Rebuilt after installing DOTween/UniTask/VContainer: Succeeded, 33.7 seconds, 0 errors; same 2 debug-occlusion shader warnings. Build ID: build_d4ed5cb6e54e. This builds ConnectionTest; it does not exercise all library features in the player.
 - Windows test build succeeded: 161 seconds, 0 errors, 2 warnings about stripped internal debug-occlusion shaders.
 - Output: `Builds/Windows/Game.exe`. Process startup checked in background without graphics; the standalone visuals and controls are not tested.
 - First build compiled shaders; retain Library/ to keep the local cache.

@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 303cbfc89865f534db067a839b599060, type: 3}
+  m_Name: GameSettings
+  m_EditorClassIdentifier: SecondChance::SecondChance.GameSettings
+  ArenaHalfSize: {x: 15, y: 10}
+  RunDuration: 300
+  MarkDuration: 8
+  PossessionRadius: 9
+  PossessionSeconds: 2
+  DeathSlowMotion: 0.06
+  PossessionGrace: 0.8
+  DashDuration: 0.18
+  DashCooldown: 1.05
+  DashSpeed: 17
+  HitStop: 0.045
+  EnemyDamageMultiplier: 0.55
+  WaveBreak: 4
+  ProjectileSpeed: 14
+  FirstWaveSize: 4
+  WaveGrowth: 2
+  MaxWaveSize: 20
+  Bodies:
+  - Kind: 0
+    Label: DUELIST
+    Health: 65
+    Speed: 6
+    Damage: 24
+    Range: 2.25
+    AttackCooldown: 0.36
+    PlayerWindup: 0.08
+    EnemyWindup: 0.4
+    Arc: 80
+    Radius: 0.45
+    Color: {r: 0.15, g: 0.8, b: 0.85, a: 1}
+    VisualPrefab: {fileID: 0}
+  - Kind: 1
+    Label: BRUTE
+    Health: 135
+    Speed: 3.5
+    Damage: 46
+    Range: 2.8
+    AttackCooldown: 0.95
+    PlayerWindup: 0.18
+    EnemyWindup: 0.85
+    Arc: 145
+    Radius: 0.65
+    Color: {r: 0.95, g: 0.45, b: 0.15, a: 1}
+    VisualPrefab: {fileID: 0}
+  - Kind: 2
+    Label: GUNNER
+    Health: 40
+    Speed: 4.8
+    Damage: 18
+    Range: 12
+    AttackCooldown: 0.5
+    PlayerWindup: 0.08
+    EnemyWindup: 0.8
+    Arc: 85
+    Radius: 0.45
+    Color: {r: 0.7, g: 0.35, b: 0.95, a: 1}
+    VisualPrefab: {fileID: 0}
