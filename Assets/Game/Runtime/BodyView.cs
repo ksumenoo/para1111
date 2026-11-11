@@ -6,7 +6,9 @@ namespace SecondChance
     public sealed class BodyView : MonoBehaviour
     {
         private Transform visual;
-        private LineRenderer ring, telegraph, health, playerBeacon;
+        private LineRenderer ring, telegraph, health, playerBeacon, hostBeacon, bossCrown;
+        private static readonly Color Gold = new Color(1,.8f,.2f);
+        private static readonly Color BossColor = new Color(1,.1f,.55f);
         private Renderer[] renderers;
         private MaterialPropertyBlock properties;
         private float flash;
@@ -66,6 +68,14 @@ namespace SecondChance
             playerBeacon.positionCount = 3;
             playerBeacon.SetPositions(new[] { new Vector3(-.25f,markerHeight,0), new Vector3(0,markerHeight-.3f,0), new Vector3(.25f,markerHeight,0) });
             playerBeacon.startColor = playerBeacon.endColor = Color.cyan;
+            // "This enemy is a second chance right now": marked, in capture range and in sight.
+            hostBeacon = MakeLine("Ready host marker", lineMaterial, .07f);
+            hostBeacon.positionCount = 5;
+            hostBeacon.SetPositions(new[] { new Vector3(0,markerHeight+.62f,0), new Vector3(.2f,markerHeight+.4f,0), new Vector3(0,markerHeight+.18f,0), new Vector3(-.2f,markerHeight+.4f,0), new Vector3(0,markerHeight+.62f,0) });
+            bossCrown = MakeLine("Boss crown", lineMaterial, .09f);
+            bossCrown.positionCount = 5;
+            bossCrown.SetPositions(new[] { new Vector3(-.42f,markerHeight+.75f,0), new Vector3(-.21f,markerHeight+1.1f,0), new Vector3(0,markerHeight+.8f,0), new Vector3(.21f,markerHeight+1.1f,0), new Vector3(.42f,markerHeight+.75f,0) });
+            bossCrown.startColor = bossCrown.endColor = BossColor;
         }
 
         private LineRenderer MakeLine(string label, Material material, float width)
@@ -85,27 +95,42 @@ namespace SecondChance
             foreach(var renderer in renderers) renderer.enabled=visible;
             transform.position = State.Position;
             // Telegraph stays in world-facing local coordinates; only the visual rotates.
-            visual.rotation = Quaternion.LookRotation(State.Facing);
+            // A flinching enemy leans back from the blow; the boss host is visibly larger.
+            float lean = Mathf.Clamp01(State.Stagger / Mathf.Max(.01f,session.Settings.HitStagger));
+            visual.rotation = Quaternion.LookRotation(State.Facing) * Quaternion.Euler(-22 * lean,0,0);
+            transform.localScale = Vector3.one * (State.IsBoss ? 1.3f : 1);
+            bool surging = State.IsPlayer && session.Surging;
             if (bodyAnimation != null) bodyAnimation.Refresh(State,session.WorldScale,paused);
             bool marked = session.IsMarked(State);
             float markRemaining = session.MarkRemaining01(State);
-            ring.enabled = visible && (State.IsPlayer || marked);
-            float ringFraction = State.IsPlayer || session.Candidate == State ? 1 : markRemaining;
+            ring.enabled = visible && (State.IsPlayer || marked || State.IsBoss);
+            float ringFraction = State.IsPlayer || session.Candidate == State || (State.IsBoss && !marked) ? 1 : markRemaining;
             for (int i = 0; i < ring.positionCount; i++)
             {
                 float angle = i * Mathf.PI * 2 / (ring.positionCount - 1) * ringFraction;
                 ring.SetPosition(i, new Vector3(Mathf.Sin(angle),0,Mathf.Cos(angle)) * (State.Definition.Radius + .25f) + Vector3.up * .07f);
             }
-            Color color = State.IsPlayer ? new Color(.3f, 1, 1) : session.Candidate == State ? Color.white : Color.Lerp(new Color(1,.55f,.1f), new Color(1,.25f,.7f), Mathf.Clamp01(markRemaining * 2));
+            Color color = State.IsPlayer ? (surging ? Gold : new Color(.3f, 1, 1)) : session.Candidate == State ? Color.white : State.IsBoss && !marked ? BossColor : Color.Lerp(new Color(1,.55f,.1f), new Color(1,.25f,.7f), Mathf.Clamp01(markRemaining * 2));
             ring.startColor = ring.endColor = color;
             if (marked && session.Phase == RunPhase.Possessing && !session.CanPossess(State))
             { color.a = .25f; ring.startColor = ring.endColor = color; }
-            ring.widthMultiplier = session.Candidate == State ? .13f + Mathf.Sin(Time.unscaledTime * 14) * .025f : State.IsPlayer ? .1f : .055f;
+            ring.widthMultiplier = session.Candidate == State ? .13f + Mathf.Sin(Time.unscaledTime * 14) * .025f : surging ? .15f + Mathf.Sin(Time.unscaledTime * 18) * .04f : State.IsPlayer ? .1f : State.IsBoss ? .09f : .055f;
             playerBeacon.enabled = visible && State.IsPlayer && State.Alive;
-            health.enabled = visible && !State.IsPlayer && State.Health < State.Definition.Health;
+            playerBeacon.startColor = playerBeacon.endColor = surging ? Gold : Color.cyan;
+            bossCrown.enabled = visible && State.IsBoss && State.Alive;
+            hostBeacon.enabled = visible && session.IsHostReady(State);
+            if (hostBeacon.enabled)
+            {
+                // Pulses faster when the player is close to needing it.
+                bool urgent = session.Player.Health <= session.Player.MaxHealth * .35f;
+                float pulse = .5f + .5f * Mathf.Sin(Time.unscaledTime * (urgent ? 16 : 6));
+                hostBeacon.startColor = hostBeacon.endColor = Color.Lerp(new Color(1,.25f,.7f), Color.white, pulse);
+                hostBeacon.widthMultiplier = urgent ? .1f : .07f;
+            }
+            health.enabled = visible && !State.IsPlayer && (State.IsBoss || State.Health < State.MaxHealth);
             health.startColor = health.endColor = marked ? new Color(1,.25f,.7f) : new Color(.8f,.85f,.9f);
             health.SetPosition(0, new Vector3(-.55f,markerHeight-.15f,0));
-            health.SetPosition(1, new Vector3(-.55f + 1.1f * Mathf.Clamp01(State.Health / State.Definition.Health),markerHeight-.15f,0));
+            health.SetPosition(1, new Vector3(-.55f + 1.1f * Mathf.Clamp01(State.Health / Mathf.Max(1,State.MaxHealth)),markerHeight-.15f,0));
             telegraph.enabled = visible && State.Windup > 0 && !State.IsPlayer;
             if (telegraph.enabled)
             {
@@ -130,6 +155,8 @@ namespace SecondChance
                         baseColor = Color.Lerp(baseColor,State.Definition.Color,.18f);
                         baseColor = Color.Lerp(baseColor,Color.white,State.IsPlayer ? .18f : .08f);
                     }
+                    if (State.IsBoss) baseColor = Color.Lerp(baseColor,BossColor,.35f);
+                    if (surging) baseColor = Color.Lerp(baseColor,Gold,.3f + Mathf.Sin(Time.unscaledTime * 18) * .12f);
                     Color tint = Color.Lerp(baseColor, Color.white, flash);
                     if (State.Invulnerable > 0 && State.IsPlayer) tint = Color.Lerp(tint,Color.white,.2f + Mathf.Sin(Time.unscaledTime * 32) * .15f);
                     renderers[i].GetPropertyBlock(properties,j);

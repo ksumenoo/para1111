@@ -32,6 +32,8 @@ namespace SecondChance.Editor
             try
             {
                 settings.UseRooms=true;settings.UseVision=true;settings.FirstWaveSize=0;settings.WaveGrowth=0;settings.WavesPerRoom=1;
+                // Formula waves and no boss: this check is about rooms, sight and exits only.
+                settings.Waves=new WaveDefinition[0];settings.UseBoss=false;
                 var game=new GameSession(settings);game.StartRun();
                 Require(game.CanSeePoint(new Vector3(0,0,-4)),"Point in forward cone is visible");
                 Require(!game.CanSeePoint(new Vector3(0,0,-9)),"Point behind player is hidden");

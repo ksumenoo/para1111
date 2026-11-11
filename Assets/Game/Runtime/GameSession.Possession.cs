@@ -8,7 +8,7 @@ namespace SecondChance
         {
             soulOrigin = position;
             PossessionRemaining = settings.PossessionSeconds;
-            stopRemaining = 0;
+            stopRemaining = 0; surgeUntil = 0; chainUntil = 0;
             SetPhase(RunPhase.Possessing);
             FindCandidate();
         }
@@ -35,12 +35,17 @@ namespace SecondChance
             oldBody.IsPlayer = false;
             Player = Candidate;
             Player.IsPlayer = true;
-            Player.MarkUntil = 0; Player.Windup = 0; Player.AttackCooldown = 0;
+            Player.MarkUntil = 0; Player.Windup = 0; Player.AttackCooldown = 0; Player.Stagger = 0;
             Player.DashCooldown = 0; Player.DashTime = 0; Player.Knockback = Vector3.zero;
             Player.Invulnerable = settings.PossessionGrace;
             Candidate = null; Transfers++; PossessionRemaining = 0;
+            // Taking the boss's own host throws his soul out: it costs him that body.
+            bool evictedBoss = Player.IsBoss;
+            Player.IsBoss = false;
+            chainUntil = worldTime + settings.ChainWindow;
             SetPhase(RunPhase.Fighting);
             Emit(CombatCue.Possessed, Player, Player.Position - soulOrigin, oldBody);
+            if (evictedBoss) QueueBossShift(Player.Position);
             return true;
         }
     }

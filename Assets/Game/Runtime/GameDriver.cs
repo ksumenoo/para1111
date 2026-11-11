@@ -25,6 +25,7 @@ namespace SecondChance
         private Material lineMaterial;
         private readonly Material[] bodyMaterials = new Material[3];
         private bool paused;
+        private MusicDirector music;
         public GameSession Session => session;
 
         [Inject] public void Construct(GameSession game, GameSettings configuration) { session = game; settings = configuration; }
@@ -49,6 +50,9 @@ namespace SecondChance
             aimView.Initialize(lineMaterial);
             gameObject.AddComponent<RoomView>().Initialize(session,lineMaterial);
             gameObject.AddComponent<VisionView>().Initialize(session,lineMaterial);
+            gameObject.AddComponent<WorldFxView>().Initialize(session,feedback,lineMaterial);
+            music = gameObject.AddComponent<MusicDirector>();
+            music.Initialize(session);
             if (showDefaultHud) { hud = gameObject.AddComponent<DefaultHud>(); hud.Initialize(session); }
             session.Spawned += SpawnView;
             session.Combat += OnCombat;
@@ -90,6 +94,7 @@ namespace SecondChance
             possessionView.Refresh(paused);
             aimView.Refresh(session, lastAim, paused);
             if (hud != null) hud.Refresh(paused);
+            if (music != null) music.Paused = paused;
             cameraRig.Refresh();
         }
 

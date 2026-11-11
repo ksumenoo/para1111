@@ -37,10 +37,54 @@ MonoBehaviour:
   PipeProp: {fileID: 919132149155446097, guid: 96231279afb34bf4182e3eb1c731c2dd, type: 3}
   TerminalProp: {fileID: 919132149155446097, guid: c205aa585b45ab543821d1a68fde72f7, type: 3}
   StreetLightProp: {fileID: 919132149155446097, guid: 05ef6e654d56b654294639e570eb7b88, type: 3}
+  CrateProp: {fileID: 919132149155446097, guid: 91b084e0da08bfa44895e92ec10ef30e, type: 3}
+  TankProp: {fileID: 919132149155446097, guid: 3544ce1cbc7b18f4b9579d054d54c4d0, type: 3}
+  ScreenProp: {fileID: 919132149155446097, guid: 9e28280e1ca999d4fb08f401631e011e, type: 3}
+  ConsoleProp: {fileID: 919132149155446097, guid: aa6e828f220343a48a81fb42521e407f, type: 3}
+  CableProp: {fileID: 919132149155446097, guid: 36d223eb01e52424dbb829a2b630742b, type: 3}
+  PanelLightProp: {fileID: 919132149155446097, guid: 43acd0f7b63fff84292b107cbad5ff4f, type: 3}
+  MedicalProp: {fileID: 919132149155446097, guid: d35cac87dd7c3d24286680616358f726, type: 3}
   VisionAngle: 110
   VisionDistance: 24
   RoomCount: 3
   WavesPerRoom: 2
+  HitStagger: 0.22
+  HeavyHitStop: 0.09
+  KnockbackDecay: 30
+  ChainWindow: 2
+  SurgeDuration: 5
+  SurgeKillExtension: 1.5
+  SurgeDamage: 1.5
+  SurgeSpeed: 1.25
+  CratesPerRoom: 5
+  CanistersPerRoom: 3
+  ExplosionRadius: 3.2
+  ExplosionDamage: 35
+  ExplosionSelfDamage: 15
+  UseBoss: 1
+  BossLives: 3
+  BossHealthScale: 2.2
+  BossDamageScale: 1.25
+  BossEscorts: 3
+  Waves:
+  - Duelists: 3
+    Brutes: 0
+    Gunners: 0
+  - Duelists: 3
+    Brutes: 0
+    Gunners: 1
+  - Duelists: 2
+    Brutes: 1
+    Gunners: 2
+  - Duelists: 3
+    Brutes: 2
+    Gunners: 2
+  - Duelists: 3
+    Brutes: 2
+    Gunners: 3
+  - Duelists: 4
+    Brutes: 3
+    Gunners: 3
   Bodies:
   - Kind: 0
     Label: "\u0414\u0423\u042D\u041B\u042F\u041D\u0422"
@@ -53,6 +97,9 @@ MonoBehaviour:
     EnemyWindup: 0.4
     Arc: 80
     Radius: 0.45
+    Push: 6
+    DashCooldownScale: 0.7
+    Unstoppable: 0
     Color: {r: 0.15, g: 0.8, b: 0.85, a: 1}
     VisualPrefab: {fileID: 756536392643375014, guid: 5bb7e96c0cf29244c91647fb8aa08747, type: 3}
   - Kind: 1
@@ -66,18 +113,24 @@ MonoBehaviour:
     EnemyWindup: 0.85
     Arc: 145
     Radius: 0.65
+    Push: 12
+    DashCooldownScale: 1
+    Unstoppable: 1
     Color: {r: 0.95, g: 0.45, b: 0.15, a: 1}
     VisualPrefab: {fileID: 8771319007847625365, guid: 293de7fa43d5ed943ba756378a4c5492, type: 3}
   - Kind: 2
     Label: "\u0421\u0422\u0420\u0415\u041B\u041E\u041A"
     Health: 40
     Speed: 4.8
-    Damage: 18
+    Damage: 20
     Range: 12
-    AttackCooldown: 0.5
+    AttackCooldown: 0.42
     PlayerWindup: 0.08
     EnemyWindup: 0.8
     Arc: 85
     Radius: 0.45
+    Push: 4
+    DashCooldownScale: 1
+    Unstoppable: 0
     Color: {r: 0.7, g: 0.35, b: 0.95, a: 1}
     VisualPrefab: {fileID: 7563134530789522429, guid: 650daf1e9e19f5a498af68df2949c7bb, type: 3}

@@ -13,6 +13,7 @@ namespace SecondChance
         private readonly System.Random random = new System.Random();
         private int nextId;
         private float worldTime, phaseTime, stopRemaining;
+        private float chainUntil, surgeUntil;
         private Vector3 soulOrigin;
         public GameSettings Settings => settings;
         public IReadOnlyList<BodyState> Bodies => bodies;
@@ -26,7 +27,11 @@ namespace SecondChance
         public int Transfers { get; private set; }
         public int Kills { get; private set; }
         public float WorldScale => Phase == RunPhase.Possessing ? settings.DeathSlowMotion : stopRemaining > 0 ? 0 : 1;
-        public float DashReady => Player == null ? 0 : Mathf.Clamp01(1 - Player.DashCooldown / settings.DashCooldown);
+        public float DashReady => Player == null ? 0 : Mathf.Clamp01(1 - Player.DashCooldown / Mathf.Max(.01f, settings.DashCooldown * Player.Definition.DashCooldownScale));
+        // Possession chain: a kill inside the window after a transfer starts the surge.
+        public bool Surging => surgeUntil > worldTime && Phase != RunPhase.Possessing;
+        public float SurgeRemaining => Surging ? surgeUntil - worldTime : 0;
+        public float ChainRemaining => Phase == RunPhase.Fighting && !Surging ? Mathf.Max(0, chainUntil - worldTime) : 0;
         public event Action<CombatEvent> Combat;
         public event Action<RunPhase> PhaseChanged;
         public event Action<BodyState> Spawned;
@@ -37,6 +42,7 @@ namespace SecondChance
         {
             bodies.Clear(); shots.Clear(); nextId = 0; worldTime = 0; phaseTime = 0; stopRemaining = 0;
             Elapsed = 0; Wave = 0; Transfers = 0; Kills = 0; Candidate = null; PossessionRemaining = 0;
+            chainUntil = 0; surgeUntil = 0; ResetBoss();
             ConfigureRoom(0);
             Player = Spawn(BodyKind.Duelist, Layout.Entry, true);
             Player.Invulnerable = 1;
@@ -46,7 +52,7 @@ namespace SecondChance
         public BodyState Spawn(BodyKind kind, Vector3 position, bool player = false)
         {
             var definition = settings.GetBody(kind);
-            var body = new BodyState { Id = ++nextId, Definition = definition, Health = definition.Health, Position = Layout.NearestFree(position, definition.Radius), IsPlayer = player };
+            var body = new BodyState { Id = ++nextId, Definition = definition, Health = definition.Health, MaxHealth = definition.Health, Position = Layout.NearestFree(position, definition.Radius), IsPlayer = player };
             bodies.Add(body);
             Spawned?.Invoke(body);
             return body;
@@ -55,6 +61,10 @@ namespace SecondChance
         public bool IsMarked(BodyState body) => body != null && body.Alive && !body.IsPlayer && body.MarkUntil > worldTime;
         public float MarkRemaining01(BodyState body) => IsMarked(body) ? Mathf.Clamp01((body.MarkUntil - worldTime) / Mathf.Max(.01f, settings.MarkDuration)) : 0;
         public bool CanPossess(BodyState body) => Phase == RunPhase.Possessing && IsMarked(body) && (body.Position - soulOrigin).sqrMagnitude <= settings.PossessionRadius * settings.PossessionRadius && Layout.HasSight(soulOrigin,body.Position);
+        // While alive: would this enemy be a valid host if the player died right now?
+        public bool IsHostReady(BodyState body) => Phase == RunPhase.Fighting && Player != null && Player.Alive && IsMarked(body)
+            && (body.Position - Player.Position).sqrMagnitude <= settings.PossessionRadius * settings.PossessionRadius && Layout.HasSight(Player.Position,body.Position);
+        public int HostsReady { get { int count = 0; for (int i = 0; i < bodies.Count; i++) if (IsHostReady(bodies[i])) count++; return count; } }
 
         public void Tick(float realDelta, PlayerCommand command)
         {
@@ -80,6 +90,7 @@ namespace SecondChance
                 body.Invulnerable = Mathf.Max(0, body.Invulnerable - delta);
                 body.AttackCooldown = Mathf.Max(0, body.AttackCooldown - delta);
                 body.DashCooldown = Mathf.Max(0, body.DashCooldown - delta);
+                body.Stagger = Mathf.Max(0, body.Stagger - delta);
                 if (body.Windup > 0)
                 {
                     body.Windup -= delta;
@@ -87,11 +98,12 @@ namespace SecondChance
                 }
                 if (!body.Alive) continue;
                 if (body.IsPlayer && Phase != RunPhase.Possessing) TickPlayer(body, command, delta);
-                else TickEnemy(body, delta);
+                else if (body.Stagger <= 0) TickEnemy(body, delta);
                 MoveBody(body,body.Knockback*delta);
-                body.Knockback = Vector3.MoveTowards(body.Knockback, Vector3.zero, delta * 35);
+                body.Knockback = Vector3.MoveTowards(body.Knockback, Vector3.zero, delta * settings.KnockbackDecay);
             }
             SeparateBodies();
+            CollideProps();
             TickShots(delta);
             if (Phase == RunPhase.Fighting || Phase == RunPhase.Intermission) TickWaves(delta);
             // Retain dead bodies for one frame so presentation can process death events, then prune.
@@ -106,7 +118,7 @@ namespace SecondChance
             if (command.Dash && body.DashCooldown <= 0)
             {
                 body.DashDirection = move.sqrMagnitude > .01f ? move.normalized : body.Facing;
-                body.DashTime = settings.DashDuration; body.DashCooldown = settings.DashCooldown;
+                body.DashTime = settings.DashDuration; body.DashCooldown = settings.DashCooldown * body.Definition.DashCooldownScale;
                 body.Invulnerable = Mathf.Max(body.Invulnerable, settings.DashDuration);
                 body.Windup = 0;
                 Emit(CombatCue.Dash, body, body.DashDirection);
@@ -119,7 +131,8 @@ namespace SecondChance
             }
             else
             {
-                MoveBody(body,move*body.Definition.Speed*delta*(body.Windup>0 ? .5f : 1));
+                float speed = body.Definition.Speed * (Surging ? settings.SurgeSpeed : 1);
+                MoveBody(body,move*speed*delta*(body.Windup>0 ? .5f : 1));
                 if (command.Attack) TryAttack(body, body.Facing);
             }
         }
@@ -133,13 +146,14 @@ namespace SecondChance
             bool sight=Layout.HasSight(body.Position,Phase==RunPhase.Possessing ? soulOrigin : Player.Position);
             if(settings.UseRooms && Phase==RunPhase.Fighting)
             {
-                if(sight && distance<=16) { body.LastKnownPlayer=Player.Position; body.AlertUntil=worldTime+3; }
+                // The boss always knows where the player is; ordinary enemies need to see or remember.
+                if(body.IsBoss || (sight && distance<=16)) { body.LastKnownPlayer=Player.Position; body.AlertUntil=worldTime+3; }
                 else if(body.AlertUntil<=worldTime)return;
                 if(!sight) direction=Layout.Route(body.Position,body.LastKnownPlayer,body.Definition.Radius);
             }
             if (body.Windup > 0) return;
             body.Facing = direction;
-            float speed = body.Definition.Speed * .68f;
+            float speed = body.Definition.Speed * (body.IsBoss ? .82f : .68f);
             var navigationTarget=Phase==RunPhase.Possessing ? soulOrigin : sight ? Player.Position : body.LastKnownPlayer;
             if (body.Definition.Kind == BodyKind.Gunner)
             {
@@ -166,6 +180,13 @@ namespace SecondChance
                 MoveBody(a,push);
                 MoveBody(b,-push);
             }
+        }
+
+        private void StartSurge()
+        {
+            chainUntil = 0;
+            surgeUntil = worldTime + settings.SurgeDuration;
+            Emit(CombatCue.Surge, Player, Player.Facing);
         }
 
         private Vector3 Clamp(Vector3 value, float radius) => new Vector3(Mathf.Clamp(value.x, -settings.ArenaHalfSize.x + radius, settings.ArenaHalfSize.x - radius), 0, Mathf.Clamp(value.z, -settings.ArenaHalfSize.y + radius, settings.ArenaHalfSize.y - radius));

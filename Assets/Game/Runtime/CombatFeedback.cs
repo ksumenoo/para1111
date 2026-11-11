@@ -19,6 +19,10 @@ namespace SecondChance
         private float shake;
         private Material sparkMaterial, muzzleMaterial;
         private bool visibleEffect = true;
+        // Generated stand-ins: used where no clip is assigned or no file exists for the cue.
+        private AudioClip whoosh, explosion, crack, chime, growl;
+        private static readonly Color Gold = new Color(1,.8f,.2f);
+        private static readonly Color BossColor = new Color(1,.1f,.55f);
 
         public void Initialize(Camera camera, Material material)
         {
@@ -29,13 +33,15 @@ namespace SecondChance
                 voices[i].spatialBlend = 0; voices[i].playOnAwake = false;
                 voices[i].priority = i == 3 ? 64 : 128;
             }
+            whoosh = SynthAudio.Whoosh(); explosion = SynthAudio.Explosion(); crack = SynthAudio.Crack();
+            chime = SynthAudio.Chime(); growl = SynthAudio.Growl();
             if (sparkTexture != null) sparkMaterial = new Material(material) { mainTexture = sparkTexture };
             if (muzzleTexture != null) muzzleMaterial = new Material(material) { mainTexture = muzzleTexture };
         }
 
         public void Play(CombatEvent message, bool visible = true)
         {
-            visibleEffect=visible;
+            visibleEffect=visible || message.Cue==CombatCue.BossShift;
             AudioClip clip = null;
             float volume = 1;
             int channel = 0;
@@ -43,7 +49,7 @@ namespace SecondChance
             switch (message.Cue)
             {
                 case CombatCue.Hit:
-                    if(visible) shake = Mathf.Max(shake, message.Body.IsPlayer ? .28f : .12f);
+                    if(visible) shake = Mathf.Max(shake, message.Body.IsPlayer ? .28f : message.Amount >= 40 ? .22f : .12f);
                     Burst(message.Position, Color.white, .6f, .12f);
                     Sparks(message.Position, message.Body.IsPlayer ? new Color(1,.2f,.4f) : Color.cyan, 5, sparkMaterial);
                     clip = message.Other != null && message.Other.Definition.Kind == BodyKind.Brute && heavyHitSound != null ? heavyHitSound : hitSound;
@@ -67,11 +73,47 @@ namespace SecondChance
                     bool gunner = message.Body.Definition.Kind == BodyKind.Gunner;
                     if (!gunner) Slash(message);
                     else Sparks(message.Position + message.Direction * .9f, Color.cyan, 2, muzzleMaterial);
-                    clip = gunner ? shotSound : attackSound;
+                    clip = gunner ? shotSound : attackSound != null ? attackSound : whoosh;
                     volume = message.Body.IsPlayer ? (gunner ? .8f : .45f) : .25f;
                     channel = 2; spacing = .045f; break;
+                case CombatCue.Surge:
+                    shake = Mathf.Max(shake, .3f);
+                    Burst(message.Position, Gold, 1.2f, .3f); Burst(message.Position, Gold, 2.4f, .45f);
+                    Sparks(message.Position, Gold, 14, sparkMaterial);
+                    clip = chime; channel = 3; spacing = 0; volume = .8f; break;
+                case CombatCue.BossShift:
+                    shake = Mathf.Max(shake, .5f);
+                    if (message.Direction.sqrMagnitude > .01f)
+                        DrawLine(new[] { message.Position - message.Direction + Vector3.up, message.Position - message.Direction * .5f + Vector3.up * 2.2f, message.Position + Vector3.up }, BossColor, .35f, .45f);
+                    Burst(message.Position, BossColor, 1.4f, .35f); Burst(message.Position, BossColor, 3, .55f);
+                    Sparks(message.Position, BossColor, 16, sparkMaterial);
+                    clip = growl; channel = 3; spacing = 0; break;
             }
             PlayVoice(clip, volume, channel, spacing);
+        }
+
+        // Breakable prop was dented or destroyed (prop.Alive tells which).
+        public void PropImpact(PropState prop)
+        {
+            visibleEffect = true;
+            if (prop.Alive)
+            {
+                Sparks(prop.Position, Color.white, 3, sparkMaterial);
+                PlayVoice(hitSound, .5f, 0, .055f);
+                return;
+            }
+            shake = Mathf.Max(shake, prop.Explosive ? .75f : .2f);
+            if (prop.Explosive)
+            {
+                Burst(prop.Position, new Color(1,.55f,.1f), 1.2f, .2f); Burst(prop.Position, new Color(1,.3f,.1f), 3.2f, .4f);
+                Sparks(prop.Position, new Color(1,.6f,.15f), 22, sparkMaterial);
+                PlayVoice(explosion, 1, 1, 0);
+            }
+            else
+            {
+                Burst(prop.Position, new Color(.8f,.7f,.5f), .9f, .2f);
+                PlayVoice(crack, .9f, 1, .05f);
+            }
         }
 
         private void PlayVoice(AudioClip clip, float volume, int channel, float spacing)
@@ -149,6 +191,7 @@ namespace SecondChance
 
         private void OnDestroy()
         {
+            foreach(var clip in new[]{whoosh,explosion,crack,chime,growl}) if(clip!=null)Destroy(clip);
             foreach (var line in GetComponentsInChildren<LineRenderer>()) DOTween.Kill(line);
             if (sparkMaterial != null) Destroy(sparkMaterial);
             if (muzzleMaterial != null) Destroy(muzzleMaterial);

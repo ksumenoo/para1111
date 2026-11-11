@@ -8,7 +8,7 @@ Top-down possession slasher: three authored rooms with two waves each, then an e
 - After lethal damage: E possesses the nearest living marked enemy within radius. Two REAL seconds, while simulation slows to 6%.
 - R/Enter on results: restart. Escape: pause.
 - Aim follows the mouse. Run/strafe/backpedal clips are selected relative to that facing.
-- In room mode, clear two waves, walk to the cyan rectangle and press E. Body type and remaining health carry over. The third cleared room wins; HUD shows elapsed active time, not a five-minute deadline.
+- In room mode, clear two waves, walk to the cyan rectangle and press E. Body type and remaining health carry over. With UseBoss enabled, the last room ends with the Baron's three hosts; otherwise clearing that room wins. HUD shows elapsed active time.
 - Enemies, weapons, HP/mark rings and telegraphs are hidden outside the 110-degree cursor-facing sight cone or behind a wall. During death choice, only eligible marked hosts in range with clear sight are revealed around the soul.
 - Player damage marks enemies for 8 simulation seconds. Possession keeps the target's remaining health and weapon; marks clear between waves.
 - Original arena mode victory: survive 300 simulation seconds, then clear remaining enemies. Wave breaks count toward survival; death-choice slow motion does not accelerate survival.

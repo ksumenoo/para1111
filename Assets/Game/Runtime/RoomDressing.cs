@@ -5,7 +5,7 @@ namespace SecondChance
 {
     // All playable cover uses ArenaLayout geometry. Small dressing stays on top of
     // cover or outside the perimeter, so the visible obstacles match AI and sight.
-    public sealed class RoomDressing : MonoBehaviour
+    public sealed partial class RoomDressing : MonoBehaviour
     {
         private readonly List<Material> materials = new List<Material>();
         private Material floor, metal, pale, dark, accent, secondary, seam;
@@ -34,6 +34,7 @@ namespace SecondChance
                 Box("Edge neon",new Vector3(0,.61f,side*(z+.25f)),new Vector3(x*2,.04f,.08f),secondary);
             }
             foreach(var wall in layout.Walls) Obstacle(wall);
+            Details(layout,room);
             // Different floor language: clinic centre line, loading lanes, server cables.
             for(float a=-z+2;a<z-2;a+=2)
                 Box("Route marking",new Vector3(theme==1 ? -x*.7f : 1.2f,.012f,a),new Vector3(.1f,.012f,1),theme==1 ? secondary : accent);
@@ -83,6 +84,13 @@ namespace SecondChance
                 foreach(float side in new[]{-.25f,.25f})
                     Box("Table strap",p+new Vector3(side*w,1.05f,0),new Vector3(.16f,.03f,d*.8f),dark);
                 Model(settings.TerminalProp,p+new Vector3(w*.3f,1,0),new Vector2(w*.25f,d*.7f),.6f);
+            }
+            else if(wall.Kind==ObstacleKind.Supplies)
+            {
+                Box("Supply pallet",p+Vector3.up*.08f,new Vector3(w,.16f,d),metal);
+                Model(theme==0 ? settings.MedicalProp : settings.CrateProp,p+new Vector3(-.4f,.16f,0),new Vector2(.9f,1.1f),.85f);
+                Model(theme==2 ? settings.ConsoleProp : settings.TankProp,p+new Vector3(.45f,.16f,0),new Vector2(.7f,1),1.35f);
+                Box("Supply status",p+new Vector3(0,.18f,-d*.5f),new Vector3(w*.8f,.05f,.06f),secondary);
             }
             else if(wall.Kind==ObstacleKind.Server)
             {
