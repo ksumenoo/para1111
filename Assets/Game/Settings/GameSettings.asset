@@ -19,20 +19,20 @@ MonoBehaviour:
   PossessionSeconds: 2
   DeathSlowMotion: 0.06
   PossessionGrace: 0.8
-  DashDuration: 0.18
-  DashCooldown: 1.05
-  DashSpeed: 17
-  HitStop: 0.045
-  EnemyDamageMultiplier: 0.55
-  WaveBreak: 4
-  ProjectileSpeed: 14
+  DashDuration: 0.14
+  DashCooldown: 0.62
+  DashSpeed: 24
+  HitStop: 0.018
+  EnemyDamageMultiplier: 0.65
+  WaveBreak: 1.3
+  ProjectileSpeed: 24
   FirstWaveSize: 4
   WaveGrowth: 2
   MaxWaveSize: 20
   UseRooms: 1
   UseVision: 1
   CameraSize: 5.6
-  CameraDamping: 0.2
+  CameraDamping: 0.12
   VentProp: {fileID: 919132149155446097, guid: 8d6cd990585c2f644b7b640a77cd0c52, type: 3}
   PipeProp: {fileID: 919132149155446097, guid: 96231279afb34bf4182e3eb1c731c2dd, type: 3}
   TerminalProp: {fileID: 919132149155446097, guid: c205aa585b45ab543821d1a68fde72f7, type: 3}
@@ -48,8 +48,8 @@ MonoBehaviour:
   VisionDistance: 24
   RoomCount: 3
   WavesPerRoom: 2
-  HitStagger: 0.22
-  HeavyHitStop: 0.09
+  HitStagger: 0.14
+  HeavyHitStop: 0.045
   KnockbackDecay: 30
   ChainWindow: 2
   SurgeDuration: 5
@@ -63,7 +63,7 @@ MonoBehaviour:
   ExplosionSelfDamage: 15
   UseBoss: 1
   BossLives: 3
-  BossHealthScale: 2.2
+  BossHealthScale: 1.8
   BossDamageScale: 1.25
   BossEscorts: 3
   Waves:
@@ -88,13 +88,13 @@ MonoBehaviour:
   Bodies:
   - Kind: 0
     Label: "\u0414\u0423\u042D\u041B\u042F\u041D\u0422"
-    Health: 65
-    Speed: 6
-    Damage: 24
+    Health: 55
+    Speed: 8.5
+    Damage: 34
     Range: 2.25
-    AttackCooldown: 0.36
-    PlayerWindup: 0.08
-    EnemyWindup: 0.4
+    AttackCooldown: 0.23
+    PlayerWindup: 0.035
+    EnemyWindup: 0.28
     Arc: 80
     Radius: 0.45
     Push: 6
@@ -104,13 +104,13 @@ MonoBehaviour:
     VisualPrefab: {fileID: 756536392643375014, guid: 5bb7e96c0cf29244c91647fb8aa08747, type: 3}
   - Kind: 1
     Label: "\u0413\u0420\u041E\u041C\u0418\u041B\u0410"
-    Health: 135
-    Speed: 3.5
-    Damage: 46
+    Health: 100
+    Speed: 5.6
+    Damage: 68
     Range: 2.8
-    AttackCooldown: 0.95
-    PlayerWindup: 0.18
-    EnemyWindup: 0.85
+    AttackCooldown: 0.55
+    PlayerWindup: 0.09
+    EnemyWindup: 0.52
     Arc: 145
     Radius: 0.65
     Push: 12
@@ -120,13 +120,13 @@ MonoBehaviour:
     VisualPrefab: {fileID: 8771319007847625365, guid: 293de7fa43d5ed943ba756378a4c5492, type: 3}
   - Kind: 2
     Label: "\u0421\u0422\u0420\u0415\u041B\u041E\u041A"
-    Health: 40
-    Speed: 4.8
-    Damage: 20
+    Health: 45
+    Speed: 7.5
+    Damage: 30
     Range: 12
-    AttackCooldown: 0.42
-    PlayerWindup: 0.08
-    EnemyWindup: 0.8
+    AttackCooldown: 0.28
+    PlayerWindup: 0.035
+    EnemyWindup: 0.45
     Arc: 85
     Radius: 0.45
     Push: 4

@@ -8,7 +8,7 @@ namespace SecondChance
         [SerializeField] private Animator animator;
         [SerializeField] private float attackClipLength = 1;
         private Vector3 lastPosition;
-        private float windupDuration, recovery;
+        private float windupDuration, recovery, recoveryDuration = .2f;
         private string current = "";
 
         public void Initialize(BodyState state)
@@ -36,10 +36,11 @@ namespace SecondChance
             if (recovery > 0)
             {
                 recovery -= Time.unscaledDeltaTime * worldScale;
-                animator.speed = attackClipLength * .65f / .2f * worldScale;
+                animator.speed = attackClipLength * .65f / recoveryDuration * worldScale;
                 return;
             }
-            animator.speed = worldScale;
+            float travelSpeed = movement.magnitude / Mathf.Max(.0001f,Time.unscaledDeltaTime * worldScale);
+            animator.speed = worldScale * (moving ? Mathf.Clamp(travelSpeed / 5.5f,.65f,2.1f) : 1);
             string locomotion="Idle";
             if(moving)
             {
@@ -61,7 +62,8 @@ namespace SecondChance
             }
             if (message.Cue == CombatCue.Attack)
             {
-                recovery = .2f;
+                recoveryDuration = Mathf.Clamp(message.Body.Definition.AttackCooldown * .55f,.1f,.18f);
+                recovery = recoveryDuration;
                 animator.Play("Attack",0,.35f); current = "Attack";
             }
             if (message.Cue == CombatCue.Possessed) { recovery = 0; windupDuration = 0; current = ""; Play("Idle"); }

@@ -8,6 +8,11 @@ namespace SecondChance.Editor
 {
     public static class TeamValidation
     {
+        public static void BuildFast()
+        {
+            try {FastPaceSetup.Apply();FastPaceSetup.Verify();Build();}
+            catch(Exception exception) {Debug.LogException(exception);EditorApplication.Exit(1);}
+        }
         // Can also run in batch mode if the interactive Editor's asset indexing fails.
         public static void Build()
         {

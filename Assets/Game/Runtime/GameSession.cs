@@ -132,7 +132,7 @@ namespace SecondChance
             else
             {
                 float speed = body.Definition.Speed * (Surging ? settings.SurgeSpeed : 1);
-                MoveBody(body,move*speed*delta*(body.Windup>0 ? .5f : 1));
+                MoveBody(body,move*speed*delta*(body.Windup>0 ? .8f : 1));
                 if (command.Attack) TryAttack(body, body.Facing);
             }
         }
