@@ -47,7 +47,7 @@ namespace SecondChance
         }
         private void LateUpdate()
         {
-            if(exitRing==null)return;
+            if(exitRing==null || session==null)return;
             var color=session.AwaitingExit ? Color.cyan : new Color(.35f,.2f,.2f);
             exitRing.startColor=exitRing.endColor=color;
         }

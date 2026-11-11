@@ -9,8 +9,7 @@ namespace SecondChance
         [SerializeField] private AudioClip heavyHitSound, shotSound, enemyDeathSound;
         [SerializeField, Range(0,1)] private float masterVolume = .65f;
         [SerializeField] private Texture2D sparkTexture, muzzleTexture;
-        private Camera gameCamera;
-        private Vector3 cameraRest;
+        private FollowCameraRig cameraRig;
         private Material lineMaterial;
         // Separate fixed voices prevent crowd kills from multiplying overlapping OneShots.
         // Bus gains sum to 1, leaving headroom at the configured master volume.
@@ -23,7 +22,7 @@ namespace SecondChance
 
         public void Initialize(Camera camera, Material material)
         {
-            gameCamera = camera; cameraRest = camera.transform.position; lineMaterial = material;
+            cameraRig = GetComponent<FollowCameraRig>(); lineMaterial = material;
             for (int i = 0; i < voices.Length; i++)
             {
                 voices[i] = gameObject.AddComponent<AudioSource>();
@@ -141,18 +140,16 @@ namespace SecondChance
                 .SetUpdate(true).SetTarget(line).OnComplete(() => { if (line != null) Destroy(line.gameObject); });
         }
 
-        private void LateUpdate()
+        private void Update()
         {
-            if (gameCamera == null) return;
             shake = Mathf.MoveTowards(shake, 0, Time.unscaledDeltaTime * 2.8f);
             Vector2 offset = Random.insideUnitCircle * shake;
-            gameCamera.transform.position = cameraRest + new Vector3(offset.x, offset.y, 0);
+            if (cameraRig != null) cameraRig.ShakeOffset = new Vector3(offset.x, offset.y, 0);
         }
 
         private void OnDestroy()
         {
             foreach (var line in GetComponentsInChildren<LineRenderer>()) DOTween.Kill(line);
-            if (gameCamera != null) gameCamera.transform.position = cameraRest;
             if (sparkMaterial != null) Destroy(sparkMaterial);
             if (muzzleMaterial != null) Destroy(muzzleMaterial);
         }

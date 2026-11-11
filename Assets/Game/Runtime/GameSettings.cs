@@ -31,6 +31,8 @@ namespace SecondChance
         public float WaveBreak = 4, ProjectileSpeed = 14;
         public int FirstWaveSize = 4, WaveGrowth = 2, MaxWaveSize = 20;
         public bool UseRooms, UseVision;
+        [Min(2)] public float CameraSize = 5.6f;
+        [Range(0,1)] public float CameraDamping = .2f;
         [Range(30,180)] public float VisionAngle = 110;
         public float VisionDistance = 24;
         [Min(1)] public int RoomCount = 3, WavesPerRoom = 2;

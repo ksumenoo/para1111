@@ -18,6 +18,7 @@ namespace SecondChance
         private Transform actorsRoot;
         private DefaultHud hud;
         private CombatFeedback feedback;
+        private FollowCameraRig cameraRig;
         private PossessionView possessionView;
         private AimView aimView;
         private Vector3 lastAim;
@@ -37,6 +38,8 @@ namespace SecondChance
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
             for (int i = 0; i < 3; i++) bodyMaterials[i] = new Material(shader) { color = settings.GetBody((BodyKind)i).Color };
             lineMaterial = new Material(Shader.Find("Sprites/Default"));
+            cameraRig = gameObject.AddComponent<FollowCameraRig>();
+            cameraRig.Initialize(gameCamera, session, settings);
             feedback = GetComponent<CombatFeedback>();
             if (feedback == null) feedback = gameObject.AddComponent<CombatFeedback>();
             feedback.Initialize(gameCamera, lineMaterial);
@@ -87,6 +90,7 @@ namespace SecondChance
             possessionView.Refresh(paused);
             aimView.Refresh(session, lastAim, paused);
             if (hud != null) hud.Refresh(paused);
+            cameraRig.Refresh();
         }
 
         public void Restart()
@@ -98,6 +102,7 @@ namespace SecondChance
             foreach (var shot in shotViews) Destroy(shot);
             shotViews.Clear();
             session.StartRun();
+            if (cameraRig != null) cameraRig.Snap();
         }
 
         private PlayerCommand ReadCommand()

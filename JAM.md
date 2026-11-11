@@ -68,3 +68,7 @@ Before final submission: launch the build, verify controls, win/lose/restart, so
 - First build compiled shaders; retain Library/ to keep the local cache.
 - Unity serialized changes to rendering/input/cloud settings and created performance-test Resources during preparation. These changes remain uncommitted for review; do not discard them automatically.
 - Initial Git checkpoint exists. No remote repository configured.
+# Camera and teammate prototype
+
+- Cinemachine 6.6 follows a stable player proxy; orthographic size 5.6, damping 0.2. Camera center is clamped to the room using viewport dimensions. Room changes/restarts snap; possession follows the new body. Combat shake is additive in the Cinemachine pipeline.
+- Compared https://github.com/evansfiet-sketch/- : keep this project's combat/rooms/visibility/animated-body implementation. Useful material to adapt next: Oттиск storyline, clinic props, memory messages, Baron and alternate endings. These are not integrated yet; avoid importing a second GameManager/input/combat system.

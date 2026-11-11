@@ -1,4 +1,4 @@
 {
   "name": "SecondChance",
-  "references": ["VContainer", "UniTask", "Unity.InputSystem", "Unity.ugui", "DOTween.Modules"]
+  "references": ["VContainer", "UniTask", "Unity.InputSystem", "Unity.ugui", "DOTween.Modules", "Unity.Cinemachine"]
 }
