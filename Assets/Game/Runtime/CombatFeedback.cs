@@ -33,7 +33,6 @@ namespace SecondChance
                     Burst(message.Position, Color.cyan, .9f, .18f); clip = dashSound; break;
                 case CombatCue.Possessed:
                     shake = .35f;
-                    DrawLine(new[] { message.Other.Position + Vector3.up, message.Position + Vector3.up }, Color.cyan, .22f, .3f);
                     Burst(message.Position, Color.cyan, 2, .4f); clip = transferSound; break;
                 case CombatCue.Attack:
                     if (message.Body.Definition.Kind != BodyKind.Gunner) Slash(message);

@@ -65,6 +65,9 @@ namespace SecondChance
             ring.enabled = State.IsPlayer || marked;
             Color color = State.IsPlayer ? new Color(.3f, 1, 1) : session.Candidate == State ? Color.white : new Color(1,.25f,.7f);
             ring.startColor = ring.endColor = color;
+            if (marked && session.Phase == RunPhase.Possessing && !session.CanPossess(State))
+            { color.a = .25f; ring.startColor = ring.endColor = color; }
+            ring.widthMultiplier = session.Candidate == State ? .13f + Mathf.Sin(Time.unscaledTime * 14) * .025f : .055f;
             health.enabled = !State.IsPlayer && State.Health < State.Definition.Health;
             health.startColor = health.endColor = marked ? new Color(1,.25f,.7f) : new Color(.8f,.85f,.9f);
             health.SetPosition(0, new Vector3(-.55f,2,0));
@@ -95,6 +98,12 @@ namespace SecondChance
 
         public void React(CombatEvent message)
         {
+            if (message.Cue == CombatCue.Possessed)
+            {
+                flash = 1;
+                visual.DOKill(); visual.localScale = Vector3.one;
+                visual.DOPunchScale(new Vector3(.3f,.3f,.3f), .3f, 3, .3f).SetUpdate(true);
+            }
             if (message.Cue == CombatCue.Hit)
             {
                 flash = 1;

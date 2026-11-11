@@ -16,6 +16,8 @@ One top-down arena, three bodies, five-minute survival plus clearing the last wa
 - `GameBootstrap`: VContainer composition root. `GameDriver`: Input System, lifecycle, view binding.
 - `BodyView`: replace fallback visuals through `BodyDefinition.VisualPrefab`. Prefab forward +Z, origin at feet. Do not add gameplay movement scripts.
 - `CombatFeedback` on scene object `Game`: assign optional hit/death/dash/transfer/attack audio clips in Inspector. The component supplies hit flash, attack arcs, impact rings and camera shake. No audio files are bundled yet.
+- `PossessionView`: exposed cyan soul, capture-radius boundary, real-time countdown arc, selected-host tether and travelling spark/trail. It is presentation only and does not delay ownership transfer. Uses unscaled animation time; reset/scene teardown clears the effect.
+- Selected-host ring pulses white; out-of-range marked bodies dim during the death window. Possession text sits below the fight.
 - `GameSession.Combat` event: `Windup`, `Attack`, `Hit`, `Death`, `Dash`, `Possessed`. Event has Body/Other, world Position/Direction, damage Amount. Body can already have zero HP on Death; avoid storing mutable snapshots for later playback.
 - `Spawned(BodyState)`, `PhaseChanged(RunPhase)`: integration events.
 - Player ring cyan; wounded enemy ring pink; possession target white. Enemy red sector is the committed attack direction; dodge after it appears.

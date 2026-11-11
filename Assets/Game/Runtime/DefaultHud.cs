@@ -46,6 +46,11 @@ namespace SecondChance
             controls.text = "WASD / ARROWS  move     LMB  attack     SPACE / SHIFT  dash     E  possess     ESC  pause";
             veil.gameObject.SetActive(paused || session.Phase == RunPhase.Ready || session.Phase == RunPhase.Won || session.Phase == RunPhase.Lost);
             center.color = Color.white;
+            var centerRect = center.rectTransform;
+            bool choosing = !paused && session.Phase == RunPhase.Possessing;
+            centerRect.anchorMin = choosing ? new Vector2(.15f,.11f) : new Vector2(.13f,.3f);
+            centerRect.anchorMax = choosing ? new Vector2(.85f,.31f) : new Vector2(.87f,.72f);
+            center.fontSize = choosing ? 34 : 44;
             if (paused) center.text = "PAUSED\nESC — continue";
             else switch (session.Phase)
             {

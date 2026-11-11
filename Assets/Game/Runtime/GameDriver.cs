@@ -17,6 +17,7 @@ namespace SecondChance
         private Transform actorsRoot;
         private DefaultHud hud;
         private CombatFeedback feedback;
+        private PossessionView possessionView;
         private Material lineMaterial;
         private readonly Material[] bodyMaterials = new Material[3];
         private bool paused;
@@ -36,6 +37,8 @@ namespace SecondChance
             feedback = GetComponent<CombatFeedback>();
             if (feedback == null) feedback = gameObject.AddComponent<CombatFeedback>();
             feedback.Initialize(gameCamera, lineMaterial);
+            possessionView = gameObject.AddComponent<PossessionView>();
+            possessionView.Initialize(session, lineMaterial);
             if (showDefaultHud) { hud = gameObject.AddComponent<DefaultHud>(); hud.Initialize(session); }
             session.Spawned += SpawnView;
             session.Combat += OnCombat;
@@ -74,12 +77,14 @@ namespace SecondChance
             foreach (var pair in views) if (!pair.Value.State.Alive) removedViews.Add(pair.Key);
             foreach (var id in removedViews) { Destroy(views[id].gameObject); views.Remove(id); }
             RefreshShots();
+            possessionView.Refresh(paused);
             if (hud != null) hud.Refresh(paused);
         }
 
         public void Restart()
         {
             paused = false;
+            if (possessionView != null) possessionView.ResetVisuals();
             foreach (var view in views.Values) if (view != null) Destroy(view.gameObject);
             views.Clear();
             foreach (var shot in shotViews) Destroy(shot);
