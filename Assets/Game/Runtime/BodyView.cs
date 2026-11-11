@@ -10,6 +10,9 @@ namespace SecondChance
         private Renderer[] renderers;
         private MaterialPropertyBlock properties;
         private float flash;
+        private BodyAnimation bodyAnimation;
+        private Color[][] originalColors;
+        private float markerHeight = 2.25f;
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         public BodyState State { get; private set; }
@@ -36,6 +39,22 @@ namespace SecondChance
                 weapon.GetComponent<Renderer>().sharedMaterial = material;
             }
             renderers = visual.GetComponentsInChildren<Renderer>();
+            bodyAnimation = visual.GetComponentInChildren<BodyAnimation>();
+            if (bodyAnimation != null) bodyAnimation.Initialize(state);
+            if (renderers.Length > 0)
+            {
+                var bounds = renderers[0].bounds;
+                foreach (var renderer in renderers) bounds.Encapsulate(renderer.bounds);
+                markerHeight = Mathf.Max(2.25f,bounds.max.y - transform.position.y + .3f);
+            }
+            originalColors = new Color[renderers.Length][];
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                var materials = renderers[i].sharedMaterials;
+                originalColors[i] = new Color[materials.Length];
+                for (int j = 0; j < materials.Length; j++)
+                    originalColors[i][j] = materials[j] != null && materials[j].HasProperty(BaseColor) ? materials[j].GetColor(BaseColor) : materials[j] != null && materials[j].HasProperty(ColorId) ? materials[j].GetColor(ColorId) : State.Definition.Color;
+            }
             properties = new MaterialPropertyBlock();
             ring = MakeLine("Ownership / mark", lineMaterial, .055f);
             ring.loop = false; ring.positionCount = 41;
@@ -45,7 +64,7 @@ namespace SecondChance
             health.positionCount = 2;
             playerBeacon = MakeLine("Player marker", lineMaterial, .1f);
             playerBeacon.positionCount = 3;
-            playerBeacon.SetPositions(new[] { new Vector3(-.25f,2.25f,0), new Vector3(0,1.95f,0), new Vector3(.25f,2.25f,0) });
+            playerBeacon.SetPositions(new[] { new Vector3(-.25f,markerHeight,0), new Vector3(0,markerHeight-.3f,0), new Vector3(.25f,markerHeight,0) });
             playerBeacon.startColor = playerBeacon.endColor = Color.cyan;
         }
 
@@ -59,11 +78,13 @@ namespace SecondChance
             return line;
         }
 
-        public void Refresh(GameSession session)
+        public void Refresh(GameSession session, bool paused = false)
         {
+            if (visual == null) return;
             transform.position = State.Position;
             // Telegraph stays in world-facing local coordinates; only the visual rotates.
             visual.rotation = Quaternion.LookRotation(State.Facing);
+            if (bodyAnimation != null) bodyAnimation.Refresh(State,session.WorldScale,paused);
             bool marked = session.IsMarked(State);
             float markRemaining = session.MarkRemaining01(State);
             ring.enabled = State.IsPlayer || marked;
@@ -81,8 +102,8 @@ namespace SecondChance
             playerBeacon.enabled = State.IsPlayer && State.Alive;
             health.enabled = !State.IsPlayer && State.Health < State.Definition.Health;
             health.startColor = health.endColor = marked ? new Color(1,.25f,.7f) : new Color(.8f,.85f,.9f);
-            health.SetPosition(0, new Vector3(-.55f,2,0));
-            health.SetPosition(1, new Vector3(-.55f + 1.1f * Mathf.Clamp01(State.Health / State.Definition.Health),2,0));
+            health.SetPosition(0, new Vector3(-.55f,markerHeight-.15f,0));
+            health.SetPosition(1, new Vector3(-.55f + 1.1f * Mathf.Clamp01(State.Health / State.Definition.Health),markerHeight-.15f,0));
             telegraph.enabled = State.Windup > 0 && !State.IsPlayer;
             if (telegraph.enabled)
             {
@@ -97,18 +118,39 @@ namespace SecondChance
                 telegraph.SetPosition(24, Vector3.up * .08f);
             }
             flash = Mathf.MoveTowards(flash, 0, Time.unscaledDeltaTime * 7);
-            Color tint = Color.Lerp(State.Definition.Color, Color.white, flash);
-            if (State.Invulnerable > 0 && State.IsPlayer) tint = Color.Lerp(tint, Color.white, .25f + Mathf.Sin(Time.unscaledTime * 32) * .2f);
-            foreach (var renderer in renderers)
+            for (int i = 0; i < renderers.Length; i++)
             {
-                renderer.GetPropertyBlock(properties);
-                properties.SetColor(BaseColor, tint); properties.SetColor(ColorId, tint);
-                renderer.SetPropertyBlock(properties);
+                for (int j = 0; j < originalColors[i].Length; j++)
+                {
+                    Color baseColor = originalColors[i][j];
+                    if (bodyAnimation != null)
+                    {
+                        baseColor = Color.Lerp(baseColor,State.Definition.Color,.18f);
+                        baseColor = Color.Lerp(baseColor,Color.white,State.IsPlayer ? .18f : .08f);
+                    }
+                    Color tint = Color.Lerp(baseColor, Color.white, flash);
+                    if (State.Invulnerable > 0 && State.IsPlayer) tint = Color.Lerp(tint,Color.white,.2f + Mathf.Sin(Time.unscaledTime * 32) * .15f);
+                    renderers[i].GetPropertyBlock(properties,j);
+                    properties.SetColor(BaseColor,tint); properties.SetColor(ColorId,tint);
+                    renderers[i].SetPropertyBlock(properties,j);
+                }
             }
         }
 
         public void React(CombatEvent message)
         {
+            if (bodyAnimation != null) bodyAnimation.React(message);
+            if (message.Cue == CombatCue.Death && bodyAnimation != null)
+            {
+                visual.DOKill(); visual.localScale = Vector3.one;
+                var corpse = visual;
+                corpse.SetParent(transform.parent,true);
+                bodyAnimation.PlayDeath();
+                corpse.DOScale(Vector3.zero,.18f).SetDelay(.9f).SetUpdate(true).SetLink(corpse.gameObject)
+                    .OnComplete(() => { if (corpse != null) Destroy(corpse.gameObject); });
+                visual = null;
+                return;
+            }
             if (message.Cue == CombatCue.Possessed)
             {
                 flash = 1;

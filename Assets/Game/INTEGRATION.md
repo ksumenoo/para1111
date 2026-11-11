@@ -23,6 +23,16 @@ One top-down arena, three bodies, five-minute survival plus clearing the last wa
 - Player always has a thick cyan ground ring and overhead chevron, independent of body type. Enemy mark arcs shrink over their remaining simulation-time lifetime and turn amber near expiry.
 - `AimView`: ground reticle, faint melee-sector/ranged-line preview, stronger committed-windup preview. Hidden while paused/dead/choosing a host; system cursor restored outside combat and on teardown.
 - Kenney light texture supplies the soul halo. Imported subset and original CC0 licenses: Assets/Game/ThirdParty/Kenney.
+
+## Imported character/environment art
+- Duelist: Quaternius Punk; Brute: enlarged, broader SWAT; Gunner: Suit. Prefabs in Assets/Game/Prefabs; all use their own embedded generic-rig clips. Brute currently uses the pack's sword as a heavy-blade stand-in.
+- BodyAnimation samples the windup portion of the attack, then plays recovery after the authoritative Attack cue. Movement/idle use Animator states; root motion is disabled. Game pause and death slow motion control animation speed.
+- Weapon skin bones are remapped to the character rig. Material colors remain per submesh; role tint, hit flash and possession flash are overlays.
+- Death detaches a short-lived animated visual; corpse animation never affects gameplay and is removed after about one second.
+- Cyberpunk props/sign atlas and Kenney industrial buildings decorate the outside perimeter only. Neon lighting and a restrained bloom/vignette profile are in the scene.
+- Backup: Arena_BeforeArt.unity references GameSettings_BeforeArt.asset, preserving the primitive visuals. Main build still uses Arena.unity only.
+- Validated: 14 core checks, initialized animators, windup pose, pause, death clip, health-preserving transfer, corpse cleanup. Human animation/feel review remains needed.
+- ArtChecks.Run verifies all 12 controller states use real runtime clips rather than __preview__ assets, root motion is disabled, and character/weapon bones belong to their prefab hierarchy.
 - `GameSession.Combat` event: `Windup`, `Attack`, `Hit`, `Death`, `Dash`, `Possessed`. Event has Body/Other, world Position/Direction, damage Amount. Body can already have zero HP on Death; avoid storing mutable snapshots for later playback.
 - `Spawned(BodyState)`, `PhaseChanged(RunPhase)`: integration events.
 - Player ring cyan; wounded enemy ring pink; possession target white. Enemy red sector is the committed attack direction; dodge after it appears.

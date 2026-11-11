@@ -1,5 +1,5 @@
 {
   "name": "SecondChance.Editor",
-  "references": ["SecondChance", "VContainer"],
+  "references": ["SecondChance", "VContainer", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime"],
   "includePlatforms": ["Editor"]
 }

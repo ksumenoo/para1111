@@ -77,7 +77,7 @@ namespace SecondChance
                     remaining -= step;
                 }
             }
-            foreach (var pair in views) pair.Value.Refresh(session);
+            foreach (var pair in views) pair.Value.Refresh(session,paused);
             removedViews.Clear();
             foreach (var pair in views) if (!pair.Value.State.Alive) removedViews.Add(pair.Key);
             foreach (var id in removedViews) { Destroy(views[id].gameObject); views.Remove(id); }

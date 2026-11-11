@@ -42,7 +42,7 @@ MonoBehaviour:
     Arc: 80
     Radius: 0.45
     Color: {r: 0.15, g: 0.8, b: 0.85, a: 1}
-    VisualPrefab: {fileID: 0}
+    VisualPrefab: {fileID: 756536392643375014, guid: 5bb7e96c0cf29244c91647fb8aa08747, type: 3}
   - Kind: 1
     Label: BRUTE
     Health: 135
@@ -55,7 +55,7 @@ MonoBehaviour:
     Arc: 145
     Radius: 0.65
     Color: {r: 0.95, g: 0.45, b: 0.15, a: 1}
-    VisualPrefab: {fileID: 0}
+    VisualPrefab: {fileID: 8771319007847625365, guid: 293de7fa43d5ed943ba756378a4c5492, type: 3}
   - Kind: 2
     Label: GUNNER
     Health: 40
@@ -68,4 +68,4 @@ MonoBehaviour:
     Arc: 85
     Radius: 0.45
     Color: {r: 0.7, g: 0.35, b: 0.95, a: 1}
-    VisualPrefab: {fileID: 0}
+    VisualPrefab: {fileID: 7563134530789522429, guid: 650daf1e9e19f5a498af68df2949c7bb, type: 3}
