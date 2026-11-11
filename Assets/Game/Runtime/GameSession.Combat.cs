@@ -21,6 +21,7 @@ namespace SecondChance
             float damage = attacker.Definition.Damage * (attacker.IsPlayer ? 1 : settings.EnemyDamageMultiplier);
             if (attacker.Definition.Kind == BodyKind.Gunner)
             {
+                if(Layout.CastFraction(attacker.Position,attacker.Position+attacker.AttackDirection*.8f,.1f)<1)return;
                 shots.Add(new ShotState { Source = attacker, PlayerShot = attacker.IsPlayer, Damage = damage, Position = attacker.Position + attacker.AttackDirection * .8f, Direction = attacker.AttackDirection });
                 return;
             }
@@ -30,7 +31,7 @@ namespace SecondChance
                 var target = bodies[i];
                 if (!target.Alive || target == attacker || attacker.IsPlayer == target.IsPlayer) continue;
                 Vector3 offset = target.Position - attacker.Position;
-                if (offset.magnitude <= attacker.Definition.Range + target.Definition.Radius && (offset.sqrMagnitude < .01f || Vector3.Dot(offset.normalized, attacker.AttackDirection) >= cosine))
+                if (Layout.HasSight(attacker.Position,target.Position) && offset.magnitude <= attacker.Definition.Range + target.Definition.Radius && (offset.sqrMagnitude < .01f || Vector3.Dot(offset.normalized, attacker.AttackDirection) >= cosine))
                     Damage(target, damage, attacker, attacker.AttackDirection);
                 if (Phase != RunPhase.Fighting) break;
             }
@@ -63,8 +64,12 @@ namespace SecondChance
                 var shot = shots[i];
                 Vector3 previous = shot.Position;
                 shot.Position += shot.Direction * settings.ProjectileSpeed * delta;
+                float wallFraction=Layout.CastFraction(previous,shot.Position,.1f);
+                bool wallHit=wallFraction<1;
+                shot.Position=Vector3.Lerp(previous,shot.Position,wallFraction);
                 shot.Remaining -= delta;
                 bool hit = false;
+                BodyState nearest=null; float nearestFraction=float.MaxValue;
                 for (int j = 0; j < bodies.Count; j++)
                 {
                     var target = bodies[j];
@@ -72,11 +77,10 @@ namespace SecondChance
                     var line = shot.Position - previous;
                     float fraction = line.sqrMagnitude > .00001f ? Mathf.Clamp01(Vector3.Dot(target.Position - previous, line) / line.sqrMagnitude) : 0;
                     if ((previous + line * fraction - target.Position).sqrMagnitude > Mathf.Pow(target.Definition.Radius + .15f, 2)) continue;
-                    // Allegiance belongs to the shot, even if its source has since been possessed.
-                    DamageFromShot(target, shot);
-                    hit = true; break;
+                    if(fraction<nearestFraction) { nearest=target; nearestFraction=fraction; }
                 }
-                if (hit || shot.Remaining <= 0 || Mathf.Abs(shot.Position.x) > settings.ArenaHalfSize.x || Mathf.Abs(shot.Position.z) > settings.ArenaHalfSize.y) shots.RemoveAt(i);
+                if(nearest!=null) { DamageFromShot(nearest,shot); hit=true; }
+                if (hit || wallHit || shot.Remaining <= 0 || Mathf.Abs(shot.Position.x) > settings.ArenaHalfSize.x || Mathf.Abs(shot.Position.z) > settings.ArenaHalfSize.y) shots.RemoveAt(i);
             }
         }
 

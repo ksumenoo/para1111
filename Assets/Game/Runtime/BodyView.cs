@@ -81,13 +81,15 @@ namespace SecondChance
         public void Refresh(GameSession session, bool paused = false)
         {
             if (visual == null) return;
+            bool visible=session.IsVisible(State);
+            foreach(var renderer in renderers) renderer.enabled=visible;
             transform.position = State.Position;
             // Telegraph stays in world-facing local coordinates; only the visual rotates.
             visual.rotation = Quaternion.LookRotation(State.Facing);
             if (bodyAnimation != null) bodyAnimation.Refresh(State,session.WorldScale,paused);
             bool marked = session.IsMarked(State);
             float markRemaining = session.MarkRemaining01(State);
-            ring.enabled = State.IsPlayer || marked;
+            ring.enabled = visible && (State.IsPlayer || marked);
             float ringFraction = State.IsPlayer || session.Candidate == State ? 1 : markRemaining;
             for (int i = 0; i < ring.positionCount; i++)
             {
@@ -99,12 +101,12 @@ namespace SecondChance
             if (marked && session.Phase == RunPhase.Possessing && !session.CanPossess(State))
             { color.a = .25f; ring.startColor = ring.endColor = color; }
             ring.widthMultiplier = session.Candidate == State ? .13f + Mathf.Sin(Time.unscaledTime * 14) * .025f : State.IsPlayer ? .1f : .055f;
-            playerBeacon.enabled = State.IsPlayer && State.Alive;
-            health.enabled = !State.IsPlayer && State.Health < State.Definition.Health;
+            playerBeacon.enabled = visible && State.IsPlayer && State.Alive;
+            health.enabled = visible && !State.IsPlayer && State.Health < State.Definition.Health;
             health.startColor = health.endColor = marked ? new Color(1,.25f,.7f) : new Color(.8f,.85f,.9f);
             health.SetPosition(0, new Vector3(-.55f,markerHeight-.15f,0));
             health.SetPosition(1, new Vector3(-.55f + 1.1f * Mathf.Clamp01(State.Health / State.Definition.Health),markerHeight-.15f,0));
-            telegraph.enabled = State.Windup > 0 && !State.IsPlayer;
+            telegraph.enabled = visible && State.Windup > 0 && !State.IsPlayer;
             if (telegraph.enabled)
             {
                 telegraph.startColor = telegraph.endColor = new Color(1,.15f,.15f);

@@ -39,7 +39,8 @@ namespace SecondChance
             {
                 reach.positionCount = 2;
                 reach.SetPosition(0,origin + direction * .8f);
-                reach.SetPosition(1,origin + direction * player.Definition.Range);
+                var end=origin + direction * player.Definition.Range;
+                reach.SetPosition(1,Vector3.Lerp(origin,end,session.Layout.CastFraction(origin,end)));
             }
             else
             {

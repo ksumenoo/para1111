@@ -19,6 +19,7 @@ namespace SecondChance
         private static readonly float[] BusGain = { .36f, .1f, .14f, .4f };
         private float shake;
         private Material sparkMaterial, muzzleMaterial;
+        private bool visibleEffect = true;
 
         public void Initialize(Camera camera, Material material)
         {
@@ -33,8 +34,9 @@ namespace SecondChance
             if (muzzleTexture != null) muzzleMaterial = new Material(material) { mainTexture = muzzleTexture };
         }
 
-        public void Play(CombatEvent message)
+        public void Play(CombatEvent message, bool visible = true)
         {
+            visibleEffect=visible;
             AudioClip clip = null;
             float volume = 1;
             int channel = 0;
@@ -42,13 +44,13 @@ namespace SecondChance
             switch (message.Cue)
             {
                 case CombatCue.Hit:
-                    shake = Mathf.Max(shake, message.Body.IsPlayer ? .28f : .12f);
+                    if(visible) shake = Mathf.Max(shake, message.Body.IsPlayer ? .28f : .12f);
                     Burst(message.Position, Color.white, .6f, .12f);
                     Sparks(message.Position, message.Body.IsPlayer ? new Color(1,.2f,.4f) : Color.cyan, 5, sparkMaterial);
                     clip = message.Other != null && message.Other.Definition.Kind == BodyKind.Brute && heavyHitSound != null ? heavyHitSound : hitSound;
                     volume = 1; break;
                 case CombatCue.Death:
-                    shake = Mathf.Max(shake, message.Body.IsPlayer ? .6f : .25f);
+                    if(visible) shake = Mathf.Max(shake, message.Body.IsPlayer ? .6f : .25f);
                     Burst(message.Position, message.Body.Definition.Color, 1.5f, .32f);
                     Sparks(message.Position, message.Body.IsPlayer ? Color.cyan : message.Body.Definition.Color, 12, sparkMaterial);
                     clip = message.Body.IsPlayer ? deathSound : enemyDeathSound;
@@ -87,7 +89,7 @@ namespace SecondChance
 
         private void Sparks(Vector3 position, Color color, int count, Material material)
         {
-            if (material == null) return;
+            if (!visibleEffect || material == null) return;
             var particles = new GameObject("Electric impact").AddComponent<ParticleSystem>();
             particles.transform.SetParent(transform, false); particles.transform.position = position + Vector3.up * .8f;
             particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -129,6 +131,7 @@ namespace SecondChance
 
         private void DrawLine(Vector3[] points, Color color, float width, float duration)
         {
+            if(!visibleEffect)return;
             var line = new GameObject("Combat FX").AddComponent<LineRenderer>();
             line.transform.SetParent(transform, false);
             line.sharedMaterial = lineMaterial; line.positionCount = points.Length;

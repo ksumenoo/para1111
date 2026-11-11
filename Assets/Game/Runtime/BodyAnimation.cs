@@ -22,7 +22,8 @@ namespace SecondChance
 
         public void Refresh(BodyState state, float worldScale, bool paused)
         {
-            bool moving = (state.Position - lastPosition).sqrMagnitude > .000001f;
+            Vector3 movement=state.Position-lastPosition;
+            bool moving = movement.sqrMagnitude > .000001f;
             lastPosition = state.Position;
             if (paused || worldScale <= 0) { animator.speed = 0; return; }
             if (state.Windup > 0 && windupDuration > 0)
@@ -39,7 +40,16 @@ namespace SecondChance
                 return;
             }
             animator.speed = worldScale;
-            Play(moving ? "Move" : "Idle");
+            string locomotion="Idle";
+            if(moving)
+            {
+                Vector3 direction=movement.normalized;
+                float forward=Vector3.Dot(direction,state.Facing);
+                float side=Vector3.Dot(direction,Vector3.Cross(Vector3.up,state.Facing));
+                locomotion=forward<-.55f ? "MoveBack" : Mathf.Abs(side)>.65f ? (side>0 ? "MoveRight" : "MoveLeft") : "Move";
+                if(!animator.HasState(0,Animator.StringToHash("Base Layer."+locomotion)))locomotion="Move";
+            }
+            Play(locomotion);
         }
 
         public void React(CombatEvent message)

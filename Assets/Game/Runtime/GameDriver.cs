@@ -44,6 +44,8 @@ namespace SecondChance
             possessionView.Initialize(session, lineMaterial, soulGlowTexture, gameCamera);
             aimView = gameObject.AddComponent<AimView>();
             aimView.Initialize(lineMaterial);
+            gameObject.AddComponent<RoomView>().Initialize(session,lineMaterial);
+            gameObject.AddComponent<VisionView>().Initialize(session,lineMaterial);
             if (showDefaultHud) { hud = gameObject.AddComponent<DefaultHud>(); hud.Initialize(session); }
             session.Spawned += SpawnView;
             session.Combat += OnCombat;
@@ -134,7 +136,7 @@ namespace SecondChance
         private void OnCombat(CombatEvent message)
         {
             if (views.TryGetValue(message.Body.Id, out var view)) view.React(message);
-            feedback.Play(message);
+            feedback.Play(message,message.Body.IsPlayer || session.CanSeePoint(message.Position));
         }
 
         private void RefreshShots()
@@ -151,7 +153,7 @@ namespace SecondChance
             }
             for (int i = 0; i < shotViews.Count; i++)
             {
-                bool active = i < session.Shots.Count;
+                bool active = i < session.Shots.Count && session.CanSeePoint(session.Shots[i].Position);
                 shotViews[i].SetActive(active);
                 if (active) { shotViews[i].transform.position = session.Shots[i].Position + Vector3.up * .8f; shotViews[i].transform.rotation = Quaternion.LookRotation(session.Shots[i].Direction); }
             }

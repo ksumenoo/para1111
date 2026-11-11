@@ -31,13 +31,14 @@ namespace SecondChance
         public event Action<RunPhase> PhaseChanged;
         public event Action<BodyState> Spawned;
 
-        public GameSession(GameSettings settings) { this.settings = settings; }
+        public GameSession(GameSettings settings) { this.settings = settings; Layout=new ArenaLayout(settings.ArenaHalfSize,settings.UseRooms ? 0 : -1); }
 
         public void StartRun()
         {
             bodies.Clear(); shots.Clear(); nextId = 0; worldTime = 0; phaseTime = 0; stopRemaining = 0;
             Elapsed = 0; Wave = 0; Transfers = 0; Kills = 0; Candidate = null; PossessionRemaining = 0;
-            Player = Spawn(BodyKind.Duelist, Vector3.zero, true);
+            ConfigureRoom(0);
+            Player = Spawn(BodyKind.Duelist, Layout.Entry, true);
             Player.Invulnerable = 1;
             StartWave();
         }
@@ -45,7 +46,7 @@ namespace SecondChance
         public BodyState Spawn(BodyKind kind, Vector3 position, bool player = false)
         {
             var definition = settings.GetBody(kind);
-            var body = new BodyState { Id = ++nextId, Definition = definition, Health = definition.Health, Position = Clamp(position, definition.Radius), IsPlayer = player };
+            var body = new BodyState { Id = ++nextId, Definition = definition, Health = definition.Health, Position = Layout.NearestFree(position, definition.Radius), IsPlayer = player };
             bodies.Add(body);
             Spawned?.Invoke(body);
             return body;
@@ -53,11 +54,13 @@ namespace SecondChance
 
         public bool IsMarked(BodyState body) => body != null && body.Alive && !body.IsPlayer && body.MarkUntil > worldTime;
         public float MarkRemaining01(BodyState body) => IsMarked(body) ? Mathf.Clamp01((body.MarkUntil - worldTime) / Mathf.Max(.01f, settings.MarkDuration)) : 0;
-        public bool CanPossess(BodyState body) => Phase == RunPhase.Possessing && IsMarked(body) && (body.Position - soulOrigin).sqrMagnitude <= settings.PossessionRadius * settings.PossessionRadius;
+        public bool CanPossess(BodyState body) => Phase == RunPhase.Possessing && IsMarked(body) && (body.Position - soulOrigin).sqrMagnitude <= settings.PossessionRadius * settings.PossessionRadius && Layout.HasSight(soulOrigin,body.Position);
 
         public void Tick(float realDelta, PlayerCommand command)
         {
             if (Phase == RunPhase.Ready || Phase == RunPhase.Won || Phase == RunPhase.Lost) return;
+            if(Phase==RunPhase.Intermission && AwaitingExit && command.Possess && (Player.Position-Layout.Exit).sqrMagnitude<=5)
+            { EnterNextRoom(); command.Possess=false; }
             // Countdown deliberately uses realDelta, independently of slow motion or hit stop.
             if (Phase == RunPhase.Possessing)
             {
@@ -85,7 +88,7 @@ namespace SecondChance
                 if (!body.Alive) continue;
                 if (body.IsPlayer && Phase != RunPhase.Possessing) TickPlayer(body, command, delta);
                 else TickEnemy(body, delta);
-                body.Position = Clamp(body.Position + body.Knockback * delta, body.Definition.Radius);
+                MoveBody(body,body.Knockback*delta);
                 body.Knockback = Vector3.MoveTowards(body.Knockback, Vector3.zero, delta * 35);
             }
             SeparateBodies();
@@ -112,11 +115,11 @@ namespace SecondChance
             {
                 float step = Mathf.Min(delta, body.DashTime);
                 body.DashTime -= step;
-                body.Position = Clamp(body.Position + body.DashDirection * settings.DashSpeed * step, body.Definition.Radius);
+                MoveBody(body,body.DashDirection*settings.DashSpeed*step);
             }
             else
             {
-                body.Position = Clamp(body.Position + move * body.Definition.Speed * delta * (body.Windup > 0 ? .5f : 1), body.Definition.Radius);
+                MoveBody(body,move*body.Definition.Speed*delta*(body.Windup>0 ? .5f : 1));
                 if (command.Attack) TryAttack(body, body.Facing);
             }
         }
@@ -127,17 +130,25 @@ namespace SecondChance
             Vector3 offset = (Phase == RunPhase.Possessing ? soulOrigin : Player.Position) - body.Position;
             float distance = offset.magnitude;
             Vector3 direction = distance > .001f ? offset / distance : body.Facing;
+            bool sight=Layout.HasSight(body.Position,Phase==RunPhase.Possessing ? soulOrigin : Player.Position);
+            if(settings.UseRooms && Phase==RunPhase.Fighting)
+            {
+                if(sight && distance<=16) { body.LastKnownPlayer=Player.Position; body.AlertUntil=worldTime+3; }
+                else if(body.AlertUntil<=worldTime)return;
+                if(!sight) direction=Layout.Route(body.Position,body.LastKnownPlayer,body.Definition.Radius);
+            }
             if (body.Windup > 0) return;
             body.Facing = direction;
             float speed = body.Definition.Speed * .68f;
+            var navigationTarget=Phase==RunPhase.Possessing ? soulOrigin : sight ? Player.Position : body.LastKnownPlayer;
             if (body.Definition.Kind == BodyKind.Gunner)
             {
-                if (distance < 5) body.Position = Clamp(body.Position - direction * speed * delta, body.Definition.Radius);
-                else if (distance > 9) body.Position = Clamp(body.Position + direction * speed * delta, body.Definition.Radius);
+                if (sight && distance < 5) MoveBody(body,-direction*speed*delta);
+                else if (!sight || distance > 9) MoveBody(body,Layout.Route(body.Position,navigationTarget,body.Definition.Radius)*speed*delta);
             }
             else if (distance > body.Definition.Range * .7f)
-                body.Position = Clamp(body.Position + direction * speed * delta, body.Definition.Radius);
-            if (Phase == RunPhase.Fighting && distance <= body.Definition.Range * .9f) TryAttack(body, direction);
+                MoveBody(body,Layout.Route(body.Position,navigationTarget,body.Definition.Radius)*speed*delta);
+            if (Phase == RunPhase.Fighting && sight && distance <= body.Definition.Range * .9f) TryAttack(body, direction);
         }
 
         private void SeparateBodies()
@@ -152,8 +163,8 @@ namespace SecondChance
                 float distance = difference.magnitude;
                 if (distance >= minimum) continue;
                 var push = (distance > .001f ? difference / distance : Vector3.right) * (minimum - distance) * .5f;
-                a.Position = Clamp(a.Position + push, a.Definition.Radius);
-                b.Position = Clamp(b.Position - push, b.Definition.Radius);
+                MoveBody(a,push);
+                MoveBody(b,-push);
             }
         }
 

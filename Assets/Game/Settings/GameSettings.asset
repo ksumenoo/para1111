@@ -29,6 +29,12 @@ MonoBehaviour:
   FirstWaveSize: 4
   WaveGrowth: 2
   MaxWaveSize: 20
+  UseRooms: 1
+  UseVision: 1
+  VisionAngle: 110
+  VisionDistance: 24
+  RoomCount: 3
+  WavesPerRoom: 2
   Bodies:
   - Kind: 0
     Label: DUELIST

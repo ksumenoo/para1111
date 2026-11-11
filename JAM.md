@@ -3,7 +3,7 @@
 ## Scope
 - 6 hours. Theme: Second Chance. Approved game: top-down possession slasher.
 - Deliver a Windows build; other formats are allowed.
-- One arena, three bodies, waves, attack, dash, lethal-hit possession, win/lose/restart. No progression/inventory/procedural generation.
+- Current mode: three authored rooms, two waves each, walls and cursor-facing field of view; E at the cleared-room exit. Three bodies, attack, dash, lethal-hit possession, win/lose/restart. No progression/inventory/procedural generation. User explicitly requested this extension after testing the arena.
 - AI owns code/integration/builds; user owns visual direction, sound, feel, and hands-on testing. Main scene edits are authorized.
 - Current implementation / controls / replacement points: Assets/Game/INTEGRATION.md.
 - Main scene: Assets/Game/Scenes/Arena.unity. Build-Windows.ps1 now builds the game by default.

@@ -1,14 +1,17 @@
 # SECOND CHANCE — possession slasher
 
-One top-down arena, three bodies, five-minute survival plus clearing the last wave. No upgrades or inventory.
+Top-down possession slasher: three authored rooms with two waves each, then an exit interaction. Three bodies, no upgrades or inventory. The original five-minute arena remains available with UseRooms disabled.
 
 ## Play
 - Scene: `Assets/Game/Scenes/Arena.unity`.
 - Enter: start. WASD/arrows: move. Mouse: aim. Hold LMB: attack. Space/Shift: invulnerable dash.
 - After lethal damage: E possesses the nearest living marked enemy within radius. Two REAL seconds, while simulation slows to 6%.
 - R/Enter on results: restart. Escape: pause.
+- Aim follows the mouse. Run/strafe/backpedal clips are selected relative to that facing.
+- In room mode, clear two waves, walk to the cyan rectangle and press E. Body type and remaining health carry over. The third cleared room wins; HUD shows elapsed active time, not a five-minute deadline.
+- Enemies, weapons, HP/mark rings and telegraphs are hidden outside the 110-degree cursor-facing sight cone or behind a wall. During death choice, only eligible marked hosts in range with clear sight are revealed around the soul.
 - Player damage marks enemies for 8 simulation seconds. Possession keeps the target's remaining health and weapon; marks clear between waves.
-- Victory: survive 300 simulation seconds, then clear remaining enemies. Wave breaks count toward survival; death-choice slow motion does not accelerate survival.
+- Original arena mode victory: survive 300 simulation seconds, then clear remaining enemies. Wave breaks count toward survival; death-choice slow motion does not accelerate survival.
 
 ## Ownership and extension points
 - `GameSession`: sole owner of gameplay state. Input passes `PlayerCommand`; UI reads Session. Never set health or ownership in a view.
@@ -37,11 +40,13 @@ One top-down arena, three bodies, five-minute survival plus clearing the last wa
 - `Spawned(BodyState)`, `PhaseChanged(RunPhase)`: integration events.
 - Player ring cyan; wounded enemy ring pink; possession target white. Enemy red sector is the committed attack direction; dodge after it appears.
 - Do not use Time.timeScale for effects: simulation is deliberately scaled in GameSession. UI and transfer timer stay on real time.
+- ArenaLayout is the shared source for walls, swept movement, sight rays, projectile blocking and clearance-aware grid routing. Current room coordinates target the 30x20 arena. Edit layout data together with geometry; decorative props are outside gameplay bounds.
+- Enemy AI pursues a visible player, investigates last known position for three simulation seconds and routes around walls. Projectiles, melee and possession respect wall occlusion.
 
 ## Workflow
 - Main code: `Assets/Game/Runtime`; editor-only utilities/checks: `Assets/Game/Editor`.
 - `Second Chance/Create Arena (first time)` creates a NEW arena and makes it the build scene; refuses to overwrite an existing arena.
-- No NavMesh needed: open rectangular arena, planar movement, body separation. Keep arena geometry inside the rectangle unobstructed unless collision support is added.
+- No NavMesh bake needed: ArenaLayout builds a small routing grid; RoomView renders its walls. WorldChecks covers wall/dash blocking, sight, 24 spawn-to-entry routes, room exits and melee occlusion.
 - `SecondChance.Editor.CoreChecks.Run()` verifies the critical possession rules without playing a full run.
 - Build configured game scenes: `./Build-Windows.ps1`.
 - Theme, rules, and scope approved. Priorities: responsive hits/death → reliable transfer → complete run → polish.

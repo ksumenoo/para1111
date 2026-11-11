@@ -37,6 +37,11 @@ namespace SecondChance
             var player = session.Player;
             int seconds = Mathf.CeilToInt(Mathf.Max(0, session.Settings.RunDuration - session.Elapsed));
             stats.text = $"SECOND CHANCE   /   {seconds / 60:00}:{seconds % 60:00}\nWAVE {session.Wave}   |   KILLS {session.Kills}   |   TRANSFERS {session.Transfers}";
+            if(session.Settings.UseRooms)
+            {
+                int elapsed=Mathf.FloorToInt(session.Elapsed);
+                stats.text=$"SECOND CHANCE   /   {elapsed/60:00}:{elapsed%60:00}\nROOM {session.Room+1}/{session.Settings.RoomCount}   |   WAVE {session.WavesThisRoom}/{session.Settings.WavesPerRoom}   |   TRANSFERS {session.Transfers}";
+            }
             if (player != null)
             {
                 stats.text += $"\n{player.Definition.Label}   {Mathf.CeilToInt(player.Health)} / {player.Definition.Health:0}";
@@ -55,11 +60,11 @@ namespace SecondChance
             else switch (session.Phase)
             {
                 case RunPhase.Ready:
-                    center.text = "SECOND CHANCE\n\nWound an enemy to mark its body.\nWhen you die: 2 seconds to press E and possess it.\nYou inherit its weapon and REMAINING health.\n\nENTER — begin"; break;
+                    center.text = "SECOND CHANCE\n\nWound an enemy to mark its body.\nWhen you die: 2 seconds to press E and possess it.\nYou inherit its weapon and REMAINING health.\n"+(session.Settings.UseRooms ? "Clear each room, then press E at its exit.\nEnemies are visible only in your sight cone.\n" : "")+"\nENTER — begin"; break;
                 case RunPhase.Possessing:
                     center.color = new Color(1,.4f,.75f);
-                    center.text = $"SECOND CHANCE   {session.PossessionRemaining:0.0}s\n" + (session.Candidate != null ? $"E — POSSESS {session.Candidate.Definition.Label}\n{session.Candidate.Health:0} HP" : "NO MARKED BODY IN RANGE"); break;
-                case RunPhase.Intermission: center.text = "WAVE CLEARED\nCatch your breath"; break;
+                    center.text = $"SECOND CHANCE   {session.PossessionRemaining:0.0}s\n" + (session.Candidate != null ? $"E — POSSESS {session.Candidate.Definition.Label}\n{session.Candidate.Health:0} HP" : "NO VISIBLE MARKED BODY IN RANGE"); break;
+                case RunPhase.Intermission: center.text = session.AwaitingExit ? "ROOM CLEAR\nGo to the cyan exit — E" : "WAVE CLEARED\nCatch your breath"; break;
                 case RunPhase.Won: center.text = "YOU SURVIVED\nThe soul lives on.\n\nR / ENTER — play again"; break;
                 case RunPhase.Lost: center.text = "NO SECOND CHANCE\nThe last body is gone.\n\nR / ENTER — retry"; break;
                 default: center.text = ""; break;

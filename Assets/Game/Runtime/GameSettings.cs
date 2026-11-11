@@ -30,6 +30,10 @@ namespace SecondChance
         public float HitStop = .045f, EnemyDamageMultiplier = .55f;
         public float WaveBreak = 4, ProjectileSpeed = 14;
         public int FirstWaveSize = 4, WaveGrowth = 2, MaxWaveSize = 20;
+        public bool UseRooms, UseVision;
+        [Range(30,180)] public float VisionAngle = 110;
+        public float VisionDistance = 24;
+        [Min(1)] public int RoomCount = 3, WavesPerRoom = 2;
         public BodyDefinition[] Bodies =
         {
             new BodyDefinition { Kind = BodyKind.Duelist, Label = "DUELIST", Health = 65, Speed = 6, Damage = 24, Range = 2.25f, AttackCooldown = .36f, EnemyWindup = .4f, Arc = 80, Color = new Color(.15f,.8f,.85f) },
@@ -67,6 +71,8 @@ namespace SecondChance
         public float Windup { get; internal set; }
         internal float AttackCooldown, Invulnerable, DashTime, DashCooldown;
         internal Vector3 AttackDirection, DashDirection, Knockback;
+        internal Vector3 LastKnownPlayer;
+        internal float AlertUntil;
     }
 
     public sealed class ShotState
