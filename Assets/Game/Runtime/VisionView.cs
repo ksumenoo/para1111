@@ -16,7 +16,7 @@ namespace SecondChance
             var filter=fan.AddComponent<MeshFilter>();renderer=fan.AddComponent<MeshRenderer>();
             material=new Material(lineMaterial);renderer.sharedMaterial=material;
             renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
-            mesh=new Mesh { name="Occluded sight cone" };filter.sharedMesh=mesh;
+            mesh=new Mesh { name="Occluded sight cone" };mesh.MarkDynamic();filter.sharedMesh=mesh;
             var triangles=new int[81*3];
             for(int i=0;i<81;i++){triangles[i*3]=0;triangles[i*3+1]=i+1;triangles[i*3+2]=i+2;}
             mesh.vertices=vertices;mesh.triangles=triangles;

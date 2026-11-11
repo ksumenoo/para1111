@@ -32,6 +32,7 @@ namespace SecondChance
 
         private void Start()
         {
+            Application.targetFrameRate=120;
             if (gameCamera == null) gameCamera = Camera.main;
             if (gameCamera == null) { Debug.LogError("GameDriver needs a camera.", this); enabled = false; return; }
             actorsRoot = new GameObject("Runtime Bodies").transform;
@@ -63,6 +64,7 @@ namespace SecondChance
             if (session == null || actorsRoot == null) return;
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame && session.Phase != RunPhase.Ready) paused = !paused;
+            if(paused && keyboard!=null && keyboard.qKey.wasPressedThisFrame)Application.Quit();
             if (keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.rKey.wasPressedThisFrame)
                 && (session.Phase == RunPhase.Ready || session.Phase == RunPhase.Lost || session.Phase == RunPhase.Won))
                 Restart();
@@ -175,5 +177,8 @@ namespace SecondChance
             foreach (var material in bodyMaterials) if (material != null) Destroy(material);
             if (lineMaterial != null) Destroy(lineMaterial);
         }
+
+        private void OnApplicationFocus(bool focused)
+        { if(!focused && session!=null && session.Phase!=RunPhase.Ready && session.Phase!=RunPhase.Won && session.Phase!=RunPhase.Lost)paused=true; }
     }
 }

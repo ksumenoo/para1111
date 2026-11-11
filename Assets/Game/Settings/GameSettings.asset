@@ -28,7 +28,7 @@ MonoBehaviour:
   ProjectileSpeed: 24
   FirstWaveSize: 4
   WaveGrowth: 2
-  MaxWaveSize: 20
+  MaxWaveSize: 24
   UseRooms: 1
   UseVision: 1
   CameraSize: 5.6
@@ -67,24 +67,24 @@ MonoBehaviour:
   BossDamageScale: 1.25
   BossEscorts: 3
   Waves:
-  - Duelists: 3
-    Brutes: 0
-    Gunners: 0
-  - Duelists: 3
+  - Duelists: 5
     Brutes: 0
     Gunners: 1
-  - Duelists: 2
+  - Duelists: 6
     Brutes: 1
     Gunners: 2
-  - Duelists: 3
-    Brutes: 2
-    Gunners: 2
-  - Duelists: 3
+  - Duelists: 7
     Brutes: 2
     Gunners: 3
-  - Duelists: 4
+  - Duelists: 8
     Brutes: 3
-    Gunners: 3
+    Gunners: 4
+  - Duelists: 10
+    Brutes: 4
+    Gunners: 4
+  - Duelists: 12
+    Brutes: 5
+    Gunners: 5
   Bodies:
   - Kind: 0
     Label: "\u0414\u0423\u042D\u041B\u042F\u041D\u0422"

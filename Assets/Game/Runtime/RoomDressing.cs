@@ -65,6 +65,14 @@ namespace SecondChance
             Label("ВЫХОД",layout.Exit+new Vector3(0,.04f,1),.85f,new Color(.3f,1,1));
             foreach(float side in new[]{-1f,1f})
                 Model(settings.StreetLightProp,new Vector3(side*(x+1.4f),0,z-3),new Vector2(1.4f,1.4f),3);
+            var fixedObjects=new List<GameObject>();
+            foreach(var renderer in GetComponentsInChildren<MeshRenderer>())
+            {
+                var filter=renderer.GetComponent<MeshFilter>();
+                if(renderer.GetComponent<TextMesh>()==null && filter!=null && filter.sharedMesh!=null && filter.sharedMesh.isReadable)
+                    fixedObjects.Add(renderer.gameObject);
+            }
+            if(fixedObjects.Count>0)StaticBatchingUtility.Combine(fixedObjects.ToArray(),gameObject);
         }
 
         private void Obstacle(ArenaWall wall)
@@ -122,6 +130,7 @@ namespace SecondChance
         private Material Mat(Color color,float glow=0)
         {
             var material=new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            material.enableInstancing=true;
             material.color=color;
             if(glow>0) { material.EnableKeyword("_EMISSION"); material.SetColor("_EmissionColor",color*glow); }
             materials.Add(material);return material;
@@ -131,7 +140,7 @@ namespace SecondChance
             var box=GameObject.CreatePrimitive(PrimitiveType.Cube);box.name=name;
             box.transform.SetParent(transform,false);box.transform.localPosition=position;box.transform.localScale=size;
             box.GetComponent<Renderer>().sharedMaterial=material;
-            Destroy(box.GetComponent<Collider>());
+            if(Application.isPlaying)Destroy(box.GetComponent<Collider>());else DestroyImmediate(box.GetComponent<Collider>());
         }
         private void Model(GameObject prefab,Vector3 position,Vector2 footprint,float height)
         {
@@ -144,7 +153,8 @@ namespace SecondChance
             model.transform.localScale=Vector3.one*scale;
             bounds=renderers[0].bounds;foreach(var r in renderers)bounds.Encapsulate(r.bounds);
             model.transform.position+=position-new Vector3(bounds.center.x,bounds.min.y,bounds.center.z);
-            foreach(var collider in model.GetComponentsInChildren<Collider>())Destroy(collider);
+            foreach(var collider in model.GetComponentsInChildren<Collider>())
+                if(Application.isPlaying)Destroy(collider);else DestroyImmediate(collider);
         }
         private void Label(string value,Vector3 position,float height,Color color)
         {
@@ -153,6 +163,6 @@ namespace SecondChance
             label.font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");label.GetComponent<Renderer>().sharedMaterial=label.font.material;
             label.text=value;label.fontSize=64;label.characterSize=height/64;label.anchor=TextAnchor.MiddleCenter;label.color=color;
         }
-        private void OnDestroy() { foreach(var material in materials)if(material!=null)Destroy(material); }
+        private void OnDestroy() { foreach(var material in materials)if(material!=null) {if(Application.isPlaying)Destroy(material);else DestroyImmediate(material);} }
     }
 }

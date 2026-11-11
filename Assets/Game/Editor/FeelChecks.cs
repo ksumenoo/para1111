@@ -90,13 +90,13 @@ namespace SecondChance.Editor
                 // Possessing the boss's host throws him out and costs him that body.
                 StartBossFight(game, settings);
                 var bossBody = game.Boss;
-                for (int i = 0; i < 1800 && game.Phase == RunPhase.Fighting; i++)
-                {
-                    game.Tick(1f / 30, default);
-                    // Re-mark once a second: every hit also causes hit stop, which would freeze the simulation.
-                    if (i % 30 == 0) game.Damage(bossBody, .01f, game.Player);
-                    if (game.IsHostReady(bossBody)) game.Damage(game.Player, 100000);
-                }
+                // Isolate possession from random spawn/navigation: put the host on
+                // the free entry approach, then expire its initial protection.
+                typeof(BodyState).GetProperty("Position").SetValue(bossBody,game.Layout.NearestFree(game.Player.Position+Vector3.forward*2,.7f));
+                game.Tick(1.1f,default);
+                game.Damage(bossBody,.01f,game.Player);
+                Require(game.IsHostReady(bossBody),"Boss fixture is marked, nearby and in clear sight");
+                game.Damage(game.Player,100000);
                 Require(game.Phase == RunPhase.Possessing && game.Candidate == bossBody, "Marked boss host is a valid candidate");
                 Require(game.TryPossess() && game.Player == bossBody && !bossBody.IsBoss, "Player takes the boss host");
                 game.Tick(.02f, default);

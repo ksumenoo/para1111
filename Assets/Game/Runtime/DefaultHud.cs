@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SecondChance
 {
-    public sealed class DefaultHud : MonoBehaviour
+    public sealed partial class DefaultHud : MonoBehaviour
     {
         private static readonly Color Gold = new Color(1,.8f,.2f);
         private static readonly Color Pink = new Color(1,.4f,.75f);
@@ -25,6 +25,7 @@ namespace SecondChance
             var scaler = canvas.GetComponent<UnityEngine.UI.CanvasScaler>();
             scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920,1080); scaler.matchWidthOrHeight = .5f;
+            InitializeResponsive();
             flash = Image("Event flash", Vector2.zero, Vector2.one, Color.clear);
             veil = Image("State overlay", Vector2.zero, Vector2.one, new Color(0,0,0,.65f));
             stats = Text("Status", new Vector2(.025f,.88f), new Vector2(.7f,.98f), 30, TextAnchor.UpperLeft);
@@ -40,6 +41,7 @@ namespace SecondChance
             bossBar = Image("Boss health", new Vector2(.5f,.925f), new Vector2(.9f,.943f), BossColor);
             center = Text("State", new Vector2(.13f,.3f), new Vector2(.87f,.72f), 44, TextAnchor.MiddleCenter);
             controls = Text("Controls", new Vector2(.025f,.02f), new Vector2(.98f,.10f), 24, TextAnchor.LowerCenter);
+            InitializeExitGuide();
             session.Combat += OnCombat;
             Refresh(false);
         }
@@ -65,6 +67,12 @@ namespace SecondChance
             var phase = session.Phase;
             flashAmount = Mathf.MoveTowards(flashAmount, 0, Time.unscaledDeltaTime * 1.4f);
             flash.color = new Color(flashColor.r, flashColor.g, flashColor.b, flashAmount);
+            RefreshResponsive();
+            RefreshExitGuide(paused);
+            if(player!=null)SetBar(health,Mathf.Clamp01(player.Health/Mathf.Max(1,player.MaxHealth)),.845f,.865f);
+            SetBar(dash,session.DashReady,.817f,.83f);
+            // Text changes at 12 Hz; immediate on damage, pause or a phase transition.
+            if(!ShouldRefreshText(paused,phase,player))return;
             int seconds = Mathf.CeilToInt(Mathf.Max(0, session.Settings.RunDuration - session.Elapsed));
             stats.text = $"ВТОРОЙ ШАНС   /   {seconds / 60:00}:{seconds % 60:00}\nВОЛНА {session.Wave}   |   УБИТО {session.Kills}   |   ПЕРЕСЕЛЕНИЙ {session.Transfers}";
             if(session.Settings.UseRooms)
@@ -105,7 +113,7 @@ namespace SecondChance
             {
                 bossLabel.color = BossColor;
                 bossLabel.text = $"БАРОН   в теле: {BodyName(boss.Definition.Kind)}   {session.BossStage}/{session.Settings.BossLives}";
-                bossBar.rectTransform.anchorMax = new Vector2(.5f + .4f * Mathf.Clamp01(boss.Health / Mathf.Max(1,boss.MaxHealth)), .943f);
+                bossBar.rectTransform.anchorMax = new Vector2(.5f + .4f * Mathf.Clamp01(boss.Health / Mathf.Max(1,boss.MaxHealth)), bossBarTop);
             }
 
             controls.text = "WASD / стрелки — движение     ЛКМ — атака     ПРОБЕЛ / SHIFT — рывок\nE — переселение / выход     ESC — пауза";
@@ -113,12 +121,13 @@ namespace SecondChance
             center.color = Color.white;
             var centerRect = center.rectTransform;
             bool choosing = !paused && phase == RunPhase.Possessing;
-            centerRect.anchorMin = choosing ? new Vector2(.15f,.11f) : new Vector2(.13f,.3f);
-            centerRect.anchorMax = choosing ? new Vector2(.85f,.31f) : new Vector2(.87f,.72f);
-            center.fontSize = choosing ? 32 : phase == RunPhase.Ready ? 32 : 42;
+            bool exiting = !paused && session.AwaitingExit;
+            centerRect.anchorMin = choosing ? new Vector2(.1f,.11f) : exiting ? new Vector2(.15f,.13f) : new Vector2(.1f,.2f);
+            centerRect.anchorMax = choosing ? new Vector2(.9f,.31f) : exiting ? new Vector2(.85f,.25f) : new Vector2(.9f,.72f);
+            center.fontSize = center.resizeTextMaxSize = choosing ? 32 : exiting ? 28 : phase == RunPhase.Ready ? 32 : 42;
             int played = Mathf.FloorToInt(session.Elapsed);
             string summary = $"Время {played / 60:00}:{played % 60:00}   |   Убито {session.Kills}   |   Переселений {session.Transfers}";
-            if (paused) center.text = "ПАУЗА\nESC — продолжить";
+            if (paused) center.text = "ПАУЗА\nESC — продолжить\nQ — выйти из игры";
             else switch (phase)
             {
                 case RunPhase.Ready:
@@ -143,6 +152,8 @@ namespace SecondChance
         {
             var text = Rect(name, minimum, maximum).gameObject.AddComponent<UnityEngine.UI.Text>();
             text.font = font; text.fontSize = size; text.alignment = alignment; text.color = Color.white;
+            text.resizeTextForBestFit=true;text.resizeTextMinSize=16;text.resizeTextMaxSize=size;
+            text.horizontalOverflow=HorizontalWrapMode.Wrap;text.verticalOverflow=VerticalWrapMode.Truncate;
             text.raycastTarget = false;
             return text;
         }
@@ -151,7 +162,7 @@ namespace SecondChance
         private RectTransform Rect(string name, Vector2 minimum, Vector2 maximum)
         {
             var rect = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>();
-            rect.SetParent(canvas.transform, false); rect.anchorMin = minimum; rect.anchorMax = maximum;
+            rect.SetParent(safeRoot, false); rect.anchorMin = minimum; rect.anchorMax = maximum;
             rect.offsetMin = rect.offsetMax = Vector2.zero;
             return rect;
         }

@@ -27,9 +27,9 @@ namespace SecondChance
             {
                 // Melee first, so the early spawn points are not all ranged.
                 int index = 0;
-                for (int i = 0; i < authored.Duelists; i++) SpawnEnemy(BodyKind.Duelist, index++);
-                for (int i = 0; i < authored.Brutes; i++) SpawnEnemy(BodyKind.Brute, index++);
-                for (int i = 0; i < authored.Gunners; i++) SpawnEnemy(BodyKind.Gunner, index++);
+                for (int i = 0; i < authored.Duelists && index<settings.MaxWaveSize; i++) SpawnEnemy(BodyKind.Duelist, index++);
+                for (int i = 0; i < authored.Brutes && index<settings.MaxWaveSize; i++) SpawnEnemy(BodyKind.Brute, index++);
+                for (int i = 0; i < authored.Gunners && index<settings.MaxWaveSize; i++) SpawnEnemy(BodyKind.Gunner, index++);
             }
             else
             {
