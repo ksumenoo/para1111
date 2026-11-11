@@ -52,6 +52,7 @@ namespace SecondChance
         }
 
         public bool IsMarked(BodyState body) => body != null && body.Alive && !body.IsPlayer && body.MarkUntil > worldTime;
+        public float MarkRemaining01(BodyState body) => IsMarked(body) ? Mathf.Clamp01((body.MarkUntil - worldTime) / Mathf.Max(.01f, settings.MarkDuration)) : 0;
         public bool CanPossess(BodyState body) => Phase == RunPhase.Possessing && IsMarked(body) && (body.Position - soulOrigin).sqrMagnitude <= settings.PossessionRadius * settings.PossessionRadius;
 
         public void Tick(float realDelta, PlayerCommand command)

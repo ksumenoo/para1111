@@ -20,6 +20,8 @@ One top-down arena, three bodies, five-minute survival plus clearing the last wa
 - Current light hit: impactMetal_light_001; heavy hit: impactMetal_heavy_000, selected by the user for listening. Enemy death uses soft impact instead of the long explosion. Metallic swing on misses is disabled pending a suitable whoosh.
 - `PossessionView`: exposed cyan soul, capture-radius boundary, real-time countdown arc, selected-host tether and travelling spark/trail. It is presentation only and does not delay ownership transfer. Uses unscaled animation time; reset/scene teardown clears the effect.
 - Selected-host ring pulses white; out-of-range marked bodies dim during the death window. Possession text sits below the fight.
+- Player always has a thick cyan ground ring and overhead chevron, independent of body type. Enemy mark arcs shrink over their remaining simulation-time lifetime and turn amber near expiry.
+- `AimView`: ground reticle, faint melee-sector/ranged-line preview, stronger committed-windup preview. Hidden while paused/dead/choosing a host; system cursor restored outside combat and on teardown.
 - Kenney light texture supplies the soul halo. Imported subset and original CC0 licenses: Assets/Game/ThirdParty/Kenney.
 - `GameSession.Combat` event: `Windup`, `Attack`, `Hit`, `Death`, `Dash`, `Possessed`. Event has Body/Other, world Position/Direction, damage Amount. Body can already have zero HP on Death; avoid storing mutable snapshots for later playback.
 - `Spawned(BodyState)`, `PhaseChanged(RunPhase)`: integration events.

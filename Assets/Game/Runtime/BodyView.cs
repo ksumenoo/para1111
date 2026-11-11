@@ -6,7 +6,7 @@ namespace SecondChance
     public sealed class BodyView : MonoBehaviour
     {
         private Transform visual;
-        private LineRenderer ring, telegraph, health;
+        private LineRenderer ring, telegraph, health, playerBeacon;
         private Renderer[] renderers;
         private MaterialPropertyBlock properties;
         private float flash;
@@ -38,12 +38,15 @@ namespace SecondChance
             renderers = visual.GetComponentsInChildren<Renderer>();
             properties = new MaterialPropertyBlock();
             ring = MakeLine("Ownership / mark", lineMaterial, .055f);
-            ring.loop = true; ring.positionCount = 40;
-            for (int i = 0; i < 40; i++) { float angle = i * Mathf.PI * 2 / 40; ring.SetPosition(i, new Vector3(Mathf.Cos(angle), .06f, Mathf.Sin(angle)) * (state.Definition.Radius + .25f)); }
+            ring.loop = false; ring.positionCount = 41;
             telegraph = MakeLine("Attack telegraph", lineMaterial, .045f);
             telegraph.positionCount = 25;
             health = MakeLine("Remaining health", lineMaterial, .075f);
             health.positionCount = 2;
+            playerBeacon = MakeLine("Player marker", lineMaterial, .1f);
+            playerBeacon.positionCount = 3;
+            playerBeacon.SetPositions(new[] { new Vector3(-.25f,2.25f,0), new Vector3(0,1.95f,0), new Vector3(.25f,2.25f,0) });
+            playerBeacon.startColor = playerBeacon.endColor = Color.cyan;
         }
 
         private LineRenderer MakeLine(string label, Material material, float width)
@@ -62,12 +65,20 @@ namespace SecondChance
             // Telegraph stays in world-facing local coordinates; only the visual rotates.
             visual.rotation = Quaternion.LookRotation(State.Facing);
             bool marked = session.IsMarked(State);
+            float markRemaining = session.MarkRemaining01(State);
             ring.enabled = State.IsPlayer || marked;
-            Color color = State.IsPlayer ? new Color(.3f, 1, 1) : session.Candidate == State ? Color.white : new Color(1,.25f,.7f);
+            float ringFraction = State.IsPlayer || session.Candidate == State ? 1 : markRemaining;
+            for (int i = 0; i < ring.positionCount; i++)
+            {
+                float angle = i * Mathf.PI * 2 / (ring.positionCount - 1) * ringFraction;
+                ring.SetPosition(i, new Vector3(Mathf.Sin(angle),0,Mathf.Cos(angle)) * (State.Definition.Radius + .25f) + Vector3.up * .07f);
+            }
+            Color color = State.IsPlayer ? new Color(.3f, 1, 1) : session.Candidate == State ? Color.white : Color.Lerp(new Color(1,.55f,.1f), new Color(1,.25f,.7f), Mathf.Clamp01(markRemaining * 2));
             ring.startColor = ring.endColor = color;
             if (marked && session.Phase == RunPhase.Possessing && !session.CanPossess(State))
             { color.a = .25f; ring.startColor = ring.endColor = color; }
-            ring.widthMultiplier = session.Candidate == State ? .13f + Mathf.Sin(Time.unscaledTime * 14) * .025f : .055f;
+            ring.widthMultiplier = session.Candidate == State ? .13f + Mathf.Sin(Time.unscaledTime * 14) * .025f : State.IsPlayer ? .1f : .055f;
+            playerBeacon.enabled = State.IsPlayer && State.Alive;
             health.enabled = !State.IsPlayer && State.Health < State.Definition.Health;
             health.startColor = health.endColor = marked ? new Color(1,.25f,.7f) : new Color(.8f,.85f,.9f);
             health.SetPosition(0, new Vector3(-.55f,2,0));

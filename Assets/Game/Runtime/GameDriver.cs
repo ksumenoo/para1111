@@ -19,6 +19,8 @@ namespace SecondChance
         private DefaultHud hud;
         private CombatFeedback feedback;
         private PossessionView possessionView;
+        private AimView aimView;
+        private Vector3 lastAim;
         private Material lineMaterial;
         private readonly Material[] bodyMaterials = new Material[3];
         private bool paused;
@@ -40,6 +42,8 @@ namespace SecondChance
             feedback.Initialize(gameCamera, lineMaterial);
             possessionView = gameObject.AddComponent<PossessionView>();
             possessionView.Initialize(session, lineMaterial, soulGlowTexture, gameCamera);
+            aimView = gameObject.AddComponent<AimView>();
+            aimView.Initialize(lineMaterial);
             if (showDefaultHud) { hud = gameObject.AddComponent<DefaultHud>(); hud.Initialize(session); }
             session.Spawned += SpawnView;
             session.Combat += OnCombat;
@@ -79,6 +83,7 @@ namespace SecondChance
             foreach (var id in removedViews) { Destroy(views[id].gameObject); views.Remove(id); }
             RefreshShots();
             possessionView.Refresh(paused);
+            aimView.Refresh(session, lastAim, paused);
             if (hud != null) hud.Refresh(paused);
         }
 
@@ -113,6 +118,7 @@ namespace SecondChance
                 if (plane.Raycast(ray, out float distance)) result.Aim = ray.GetPoint(distance);
             }
             else if (session.Player != null) result.Aim = session.Player.Position + session.Player.Facing;
+            lastAim = result.Aim;
             return result;
         }
 
